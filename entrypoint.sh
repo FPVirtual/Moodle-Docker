@@ -1,6 +1,14 @@
 #!/bin/bash
 set -e
 
+# Si se montó un volumen vacío sobre /var/www/html, restaurar desde backup de imagen
+if [ ! -f /var/www/html/config.php ] && [ -f /usr/src/moodle/config-dist.php ]; then
+    echo "Código Moodle no detectado en /var/www/html. Restaurando desde imagen..."
+    cp -a /usr/src/moodle/. /var/www/html/
+    chown -R www-data:www-data /var/www/html
+    echo "Código restaurado."
+fi
+
 # Esperar a que la base de datos esté disponible
 echo "Esperando a que la base de datos esté disponible en ${MOODLE_DB_HOST}:${MOODLE_DB_PORT:-3306}..."
 until php -r "new mysqli('${MOODLE_DB_HOST}', '${MOODLE_DB_USER}', '${MOODLE_DB_PASSWORD}', '${MOODLE_DB_NAME}', ${MOODLE_DB_PORT:-3306});" 2>/dev/null; do

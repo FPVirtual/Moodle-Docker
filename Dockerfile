@@ -73,6 +73,10 @@ RUN mkdir -p /var/www/moodledata && chown -R www-data:www-data /var/www/moodleda
 COPY moodle-code /var/www/html
 RUN chown -R www-data:www-data /var/www/html
 
+# Copiar también a /usr/src/moodle como backup para bind mounts vacíos
+COPY moodle-code /usr/src/moodle
+RUN chown -R www-data:www-data /usr/src/moodle
+
 # Copiar scripts de inicialización
 COPY init-scripts /init-scripts
 RUN chmod +x /init-scripts/init.sh \

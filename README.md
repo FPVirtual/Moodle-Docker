@@ -7,8 +7,8 @@ Este proyecto es una versión modernizada y autocontenida del despliegue de Mood
 | Aspecto | Proyecto anterior | `new-moodle` |
 |---------|-------------------|--------------|
 | Imagen Moodle | `cateduac/moodle:4.1.3-nginx-fpm-unoconv` (personalizada) | `php:8.1-fpm` oficial + Dockerfile propio |
-| Base de datos | Externa (no definida en compose) | MariaDB 10.6 incluida en `docker-compose.yml` |
-| Código Moodle | Bind mount (`./moodle-code`) | Empaquetado dentro de la imagen Docker |
+| Base de datos | Externa (no definida en compose) | MariaDB 10.6 **opcional** en `docker-compose.yml` (perfil `with-db`) o **externa** configurable |
+| Código Moodle | Bind mount (`./moodle-code`) | Empaquetado dentro de la imagen Docker o **bind mount externo** configurable |
 | Datos (`moodle-data`) | Bind mount | **Mantiene bind mount** para facilitar backups |
 | Scripts init | Genéricos para varios tipos de centro | **Específicos para FPD** (simplificados) |
 
@@ -49,9 +49,15 @@ new-moodle/
    ```bash
    docker network create nginx-proxy_frontend
    ```
-3. Personalizar el archivo `.env` con los valores reales (dominio, contraseñas, etc.).
+3. Copiar y personalizar el archivo de entorno:
+   ```bash
+   cp .env.example .env
+   # Edita .env con los valores reales (dominio, contraseñas, etc.)
+   ```
 
 ## Puesta en marcha
+
+### Stack completo (DB interna + código en imagen)
 
 ```bash
 cd new-moodle
@@ -59,12 +65,55 @@ cd new-moodle
 # 1. Construir la imagen
 docker compose build
 
-# 2. Levantar el entorno
-docker compose up -d
+# 2. Levantar el entorno con base de datos interna
+docker compose --profile with-db up -d
 
 # 3. Seguir los logs (la instalación inicial puede tardar varios minutos)
 docker compose logs -f moodle
 ```
+
+### Con base de datos externa
+
+Si ya tienes un contenedor MariaDB en el servidor (u otra instancia de MariaDB/MySQL):
+
+1. En `.env`, configura las variables de conexión a la DB externa:
+   ```env
+   MOODLE_DB_HOST=IP_O_NOMBRE_DEL_CONTENEDOR_DB
+   MOODLE_DB_PORT=3306
+   MOODLE_DB_NAME=moodle
+   MOODLE_DB_USER=moodle
+   MOODLE_DB_PASSWORD=xxxxxxxx
+   ```
+2. Levanta el stack **sin** el perfil `with-db`:
+   ```bash
+   docker compose up -d
+   ```
+
+### Con código Moodle externo
+
+Si prefieres montar el código de Moodle desde el host (útil para desarrollo o para gestionar el código fuera del contenedor):
+
+1. En `.env`, define la ruta al código:
+   ```env
+   MOODLE_CODE_PATH=./moodle-code
+   # o una ruta absoluta:
+   # MOODLE_CODE_PATH=/opt/moodle-code
+   ```
+2. Activa el override de Docker Compose:
+   ```bash
+   cp docker-compose.override.yml.example docker-compose.override.yml
+   ```
+3. Asegúrate de que el directorio contenga el código de Moodle (por ejemplo, descargado desde [download.moodle.org](https://download.moodle.org)).
+4. Levanta el stack (con o sin perfil `with-db` según tu configuración de DB):
+   ```bash
+   docker compose --profile with-db up -d
+   # o sin DB interna:
+   # docker compose up -d
+   ```
+
+> **Nota:** si el directorio indicado en `MOODLE_CODE_PATH` está vacío, el contenedor copiará automáticamente el código incluido en la imagen Docker al volumen montado.
+>
+> Para volver a usar el código empaquetado en la imagen, elimina o renombra `docker-compose.override.yml`.
 
 La primera vez que arranca:
 1. El `entrypoint.sh` instala Moodle automáticamente (`admin/cli/install.php`).
@@ -99,4 +148,6 @@ Genera en `./backups/`:
 ## Notas
 
 - `moodle-data` se mantiene como **carpeta local** para facilitar backups y acceso directo.
-- El código de Moodle y los scripts de inicialización van **dentro de la imagen Docker**, haciendo el despliegue reproducible en cualquier servidor.
+- El código de Moodle puede ir **dentro de la imagen Docker** (despliegue reproducible) o montarse **desde el host** mediante la variable `MOODLE_CODE_PATH`.
+- La base de datos puede ser el contenedor **MariaDB incluido** (perfil `with-db`) o una instancia **externa** ya existente.
+- Los scripts de inicialización van dentro de la imagen para garantizar reproducibilidad.

@@ -5,6 +5,7 @@ services:
     image: mariadb:10.6
     container_name: fpd-db
     restart: always
+    profiles: ["with-db"]
     environment:
       MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD:?Variable no definida}"
       MYSQL_DATABASE: "${MOODLE_DB_NAME:?Variable no definida}"
@@ -39,8 +40,6 @@ services:
     container_name: fpd-moodle
     restart: always
     depends_on:
-      db:
-        condition: service_healthy
       redis:
         condition: service_healthy
     environment:

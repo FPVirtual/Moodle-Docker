@@ -1,0 +1,18 @@
+# =============================================================================
+# Override para usar código Moodle externo
+# =============================================================================
+# Copia este archivo a docker-compose.override.yml para activarlo:
+#   cp docker-compose.override.yml.example docker-compose.override.yml
+#
+# Docker Compose carga automáticamente docker-compose.override.yml junto con
+# docker-compose.yml. Puedes modificar la ruta del código según necesites.
+# =============================================================================
+
+services:
+  moodle:
+    volumes:
+      - ${MOODLE_CODE_PATH:-./moodle-code}:/var/www/html
+
+  web:
+    volumes:
+      - ${MOODLE_CODE_PATH:-./moodle-code}:/var/www/html:ro
