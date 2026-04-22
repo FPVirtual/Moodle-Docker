@@ -28,7 +28,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     wget \
     cron \
     ghostscript \
-    libaio1 \
     libfontconfig1 \
     libfreetype6 \
     libjpeg62-turbo \
