@@ -8,6 +8,8 @@
 
 `new-moodle` es un despliegue **Docker Compose** de **Moodle 4.1.x** orientado a la **Formación Profesional a Distancia de Aragón (FPD)**. A diferencia de despliegues genéricos de Moodle, este proyecto incluye scripts de inicialización específicos que crean categorías, cursos, roles, usuarios y configuraciones propias de los centros educativos de FP a distancia de Aragón.
 
+> **Estado actual (abril 2026)**: El proyecto acaba de completar una migración que sustituye al contenedor `www.fpvirtualaragon.es`. La base de datos es **externa obligatoria** (MariaDB 10.11.16) y el `moodle-data` se monta como volumen compartido desde el contenedor anterior. El `moodle-code` se copió del contenedor anterior para garantizar concordancia total de plugins y temas. Ver `Analisis-sistema.md` y `Estudio-moodle-code-to-container.md` para el detalle completo de decisiones.
+
 El stack está diseñado para ser:
 - **Reproducible**: el código de Moodle y los scripts de inicialización se empaquetan dentro de la imagen Docker.
 - **Flexible**: permite usar una base de datos interna (perfil `with-db`) o externa, y permite montar el código de Moodle desde el host mediante `docker-compose.override.yml`.
@@ -22,7 +24,7 @@ El stack está diseñado para ser:
 | Aplicación | Moodle (PHP) | 4.1.x |
 | Procesador PHP | PHP-FPM | `php:8.1-fpm` (oficial) |
 | Servidor web | Nginx | `nginx:latest` |
-| Base de datos | MariaDB | `mariadb:10.6` (opcional, perfil `with-db`) |
+| Base de datos | MariaDB | Externa (actualmente `mariadb:10.11.16` en red Docker). El perfil `with-db` (`mariadb:10.6`) sigue disponible pero no se usa en este despliegue. |
 | Caché / Sesiones | Redis | `redis:7-alpine` |
 | Gestión CLI de Moodle | Moosh | instalado vía Composer + Git |
 | Dependencias PHP | Composer | copiado desde imagen oficial |
@@ -160,7 +162,7 @@ Toda la configuración sensible y de entorno se define en **`.env`** (a partir d
 |----------|-----------|
 | `MOODLE_DB_HOST` | Host de la BD (`db` si se usa el perfil `with-db`, o IP/hostname externo) |
 | `MOODLE_DB_NAME`, `MOODLE_DB_USER`, `MOODLE_DB_PASSWORD` | Credenciales de la base de datos |
-| `MYSQL_ROOT_PASSWORD` | Contraseña root de MariaDB (solo para perfil `with-db`) |
+| `MYSQL_ROOT_PASSWORD` | Contraseña root de MariaDB (solo para perfil `with-db`; actualmente se usa BD externa) |
 | `MOODLE_URL`, `VIRTUAL_HOST` | URL pública y dominio para el proxy inverso |
 | `MOODLE_ADMIN_USER`, `MOODLE_ADMIN_PASSWORD`, `MOODLE_ADMIN_EMAIL` | Cuenta admin inicial |
 | `MOODLE_LANG`, `MOODLE_SITE_NAME`, `MOODLE_SITE_FULLNAME` | Idioma y nombre del sitio |
@@ -168,6 +170,7 @@ Toda la configuración sensible y de entorno se define en **`.env`** (a partir d
 | `SMTP_HOSTS`, `SMTP_USER`, `SMTP_PASSWORD`, `NO_REPLY_ADDRESS` | Configuración de correo |
 | `INSTALL_TYPE` | `new-install` o `upgrade` |
 | `VERSION` | Versión de Moodle (ej. `4.1.19`), usada para filtrar plugins |
+| `MOODLE_DB_PORT` | Puerto de la base de datos (ej. `3306` para red Docker, o `3316` si se expone al host) |
 | `MOODLE_CODE_PATH` | Ruta al código Moodle en el host (para override) |
 | `FPD_PASSWORD`, `FPD_EMAIL`, `MANAGER_PASSWORD` | Credenciales específicas de usuarios FPD |
 | `APP_PASSWORD`, `APP_TEACHER_PASSWORD` | Credenciales para la app móvil de demo |
@@ -177,26 +180,29 @@ Toda la configuración sensible y de entorno se define en **`.env`** (a partir d
 
 ## Comandos de build y despliegue
 
-### Stack completo (BD interna + código en imagen)
+### Despliegue actual (BD externa + código en imagen)
 ```bash
 # 1. Preparar entorno
 cp .env.example .env
-# Editar .env con los valores reales
+# Editar .env con los valores reales (ver .env del despliegue actual como referencia)
 
 # 2. Crear red externa del proxy (requerida)
 docker network create nginx-proxy_frontend
 
-# 3. Construir y levantar
-docker compose build
-docker compose --profile with-db up -d
+# 3. Asegurar que el moodle-code esté disponible
+# En este despliegue: copiado desde contenedor anterior, o descargado/clonado
 
-# 4. Seguir logs
+# 4. Construir y levantar (sin perfil with-db)
+docker compose build
+docker compose up -d
+
+# 5. Seguir logs
 docker compose logs -f moodle
 ```
 
-### Con base de datos externa (sin perfil `with-db`)
+### Con base de datos interna (perfil `with-db` — no usado actualmente)
 ```bash
-docker compose up -d
+docker compose --profile with-db up -d
 ```
 
 ### Con código Moodle externo (desarrollo)
@@ -277,7 +283,7 @@ Documentado detalladamente en `UPGRADE.md`. Pasos clave:
 - **No se usa ionCube Loader** (omitido en Dockerfile para mantener la imagen limpia).
 - **Credenciales**: nunca commitear el archivo `.env` (está en `.gitignore`). Usar siempre `.env.example` como plantilla.
 - **SSL**: el tráfico HTTPS lo gestiona un proxy inverso externo (p. ej. `nginx-proxy`) conectado a la red `nginx-proxy_frontend`.
-- **Bind mounts**: `moodle-data/` se mantiene como carpeta local para facilitar backups. El código puede ir dentro de la imagen (más seguro/reproducible) o montarse desde host (menos seguro, solo para desarrollo).
+- **Bind mounts**: `moodle-data/` se mantiene como volumen para persistencia. En el despliegue actual apunta al directorio del contenedor anterior (`/var/moodle-docker-deploy/www.fpvirtualaragon.es/moodle-data`). **Nunca levantar dos contenedores simultáneamente sobre el mismo `moodle-data`**; Moodle no soporta dataroot compartido entre instancias activas. El código puede ir dentro de la imagen (más seguro/reproducible) o montarse desde host (menos seguro, solo para desarrollo).
 - **Backups**: el script de backup requiere que las variables `MYSQL_ROOT_PASSWORD` y `MOODLE_DB_NAME` estén disponibles en el entorno desde el que se ejecuta.
 
 ---
@@ -301,4 +307,7 @@ No hay suite de tests unitarios/integración automatizados. Las verificaciones m
 - **IDs inmutables**: en `import_FPD_categories_and_courses.sh`, los IDs de categorías y cursos son críticos para la app móvil y automatizaciones. No reordenar el array `COURSES`.
 - **Moosh plugin-list**: los scripts de `new-install` filtran plugins por `VERSION_MINOR`. Si Moodle se actualiza a una nueva versión menor (ej. 4.1 → 4.2), asegurarse de que todos los plugins tengan versión compatible antes de desplegar.
 - **Expect en upgrade**: `upgrade/moodle.sh` usa `expect` para responder automáticamente al prompt de `upgrade.php`. Si el CLI de Moodle cambia su texto interactivo, el script de expect podría fallar.
+- **Volumen compartido moodle-data**: en este despliegue el `moodle-data` se comparte con el contenedor anterior. Asegurarse siempre de que el contenedor anterior esté apagado antes de levantar el nuevo. En futuras iteraciones se migrará a un filesystem de red (GlusterFS/Galera).
 - **Override file**: `docker-compose.override.yml` se carga automáticamente. Para volver al código empaquetado en la imagen, basta con eliminar o renombrar este archivo.
+- **Dockerfile y Debian Trixie**: la imagen base `php:8.1-fpm` usa Debian Trixie (en desarrollo). El paquete `libaio1` fue eliminado del `Dockerfile` porque ya no existe en los repositorios de Trixie. Si el build falla por otros paquetes, verificar disponibilidad en `packages.debian.org`.
+- **Plugins empaquetados**: en esta migración el `moodle-code` se copió del contenedor anterior, por lo que la imagen contiene ~20 plugins de terceros. El estudio en `Estudio-moodle-code-to-container.md` detalla cómo refactorizar a una imagen que descargue plugins desde git.
