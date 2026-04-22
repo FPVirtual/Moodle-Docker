@@ -4,7 +4,6 @@
 > Proyecto: new-moodle (sustitución de www.fpvirtualaragon.es)
 > Objetivo: Identificar qué contiene `moodle-code`, cómo categorizarlo y qué pasos dar para que el despliegue no dependa de una carpeta externa, permitiendo actualizaciones limpias de Moodle.
 
----
 
 ## 1. Diagnóstico: ¿Qué contiene `moodle-code` hoy?
 
@@ -281,16 +280,169 @@ services:
 
 ---
 
-## 7. Conclusión
+## 7. Registro de decisiones de la migración real (abril 2026)
 
-**Sí es posible y recomendable** eliminar la dependencia de `moodle-code`. El esfuerzo se concentra en:
+Este apartado documenta las decisiones técnicas reales tomadas durante el despliegue de esta instancia para sustituir `www.fpvirtualaragon.es`, con sus respectivas justificaciones.
 
-1. **Descargar Moodle core oficial** en el `Dockerfile`.
-2. **Clonar plugins desde git** en el `Dockerfile` (o instalar vía Moosh en `init.sh`).
-3. **Copiar los ~6 directorios de scripts custom** a una carpeta `custom/` y luego al contenedor.
-4. **Mantener `moodle-data/` como bind mount** (eso nunca cambia).
+### 7.1. Arquitectura de red y base de datos
 
-Con esto, actualizar Moodle será tan sencillo como cambiar una variable de versión en el `Dockerfile`, hacer `docker compose up -d --build`, y dejar que el `entrypoint.sh` ejecute `upgrade.php` automáticamente.
+**Decisión**: Usar MariaDB 10.11.16 externo en lugar del perfil `with-db` interno.
+
+**Contexto**: El contenedor `moodle_mariadb_10.11.16` ya existía en la red `mariadb_10.11.16_network`, mientras que el contenedor anterior (`www.fpvirtualaragon.es`) usaba `moodle_mariadb_10.11.13` en la red `moodle_network`.
+
+**Por qué**:
+- El usuario especificó explícitamente migrar a la BD 10.11.16.
+- Conectar a través de la red Docker interna (host `moodle_mariadb_10.11.16`, puerto `3306`) es más robusto que exponer el puerto `3316` al host y usar IP del host.
+- Se añadió la red externa `mariadb_10.11.16_network` al `docker-compose.yml` del servicio `moodle`.
+
+**Cambio en `docker-compose.yml`**:
+```yaml
+networks:
+  nginx-proxy_frontend:
+    external: true
+  fpd-internal:
+    driver: bridge
+  mariadb_10_11_16_network:
+    external: true
+    name: mariadb_10.11.16_network
+```
+
+### 7.2. `moodle-code`: copia del contenedor anterior en primera instancia
+
+**Decisión**: Copiar el `moodle-code` completo de `www.fpvirtualaragon.es` al proyecto nuevo para construir la imagen.
+
+**Por qué**:
+- El `Dockerfile` requiere que exista la carpeta `moodle-code` en el contexto de build (`COPY moodle-code /var/www/html`).
+- El build falló inicialmente porque el directorio no existía.
+- Copiar el código del contenedor anterior garantiza **100% de concordancia** con los plugins, temas y personalizaciones existentes.
+- Es una solución pragmática para una migración urgente; la refactorización a imagen autocontenida (secciones 2-6) queda como trabajo futuro.
+
+**Comando ejecutado**:
+```bash
+sudo cp -a /var/moodle-docker-deploy/www.fpvirtualaragon.es/moodle-code \
+  /var/moodle-docker-deploy/moodle-docker-test/Moodle-Docker/moodle-code
+```
+
+### 7.3. Corrección del Dockerfile: `libaio1` en Debian Trixie
+
+**Problema**: El build falló con:
+```
+E: Unable to locate package libaio1
+```
+
+**Causa**: La imagen base `php:8.1-fpm` ahora usa Debian Trixie (versión en desarrollo), donde el paquete `libaio1` ya no existe en los repositorios.
+
+**Decisión**: Eliminar `libaio1` de la lista de paquetes en el `Dockerfile`.
+
+**Justificación**: `libaio1` solo se requiere para Oracle Instant Client. Moodle con MariaDB no lo necesita. Este cambio no afecta la funcionalidad del stack.
+
+**Cambio**:
+```dockerfile
+# Antes:
+    ghostscript \
+    libaio1 \
+    libfontconfig1 \
+
+# Después:
+    ghostscript \
+    libfontconfig1 \
+```
+
+### 7.4. `moodle-data`: volumen compartido en lugar de copia
+
+**Decisión**: Montar el `moodle-data` del contenedor anterior como volumen compartido en lugar de copiarlo.
+
+**Contexto**: El contenedor nuevo inicialmente usaba un `moodle-data` vacío creado automáticamente por Docker (`root:root`), lo que provocó el error:
+```
+Fatal error: $CFG->dataroot is not writable, admin has to fix directory permissions!
+```
+
+**Por qué se eligió volumen compartido**:
+1. El servidor es de **testing**; no se justifica duplicar gigas de datos en este entorno.
+2. El usuario confirmó que en el futuro el `moodle-data` vivirá bajo un sistema de replicación tipo **GlusterFS/Galera**, por lo que el modelo de volumen compartido es el arquitectónicamente correcto.
+3. El contenedor anterior (`www.fpvirtualaragon.es`) será apagado permanentemente; no hay riesgo de que ambos escriban simultáneamente siempre que se gestione el ciclo de vida correctamente.
+
+**Cambio en `docker-compose.yml`**:
+```yaml
+services:
+  moodle:
+    volumes:
+      - /var/moodle-docker-deploy/www.fpvirtualaragon.es/moodle-data:/var/www/moodledata
+      # ...
+  web:
+    volumes:
+      - /var/moodle-docker-deploy/www.fpvirtualaragon.es/moodle-data:/var/www/moodledata:ro
+      # ...
+```
+
+**Restricción crítica**: Nunca levantar ambos contenedores simultáneamente. Moodle no soporta que dos instancias compartan el mismo `dataroot`.
+
+### 7.5. Error de `lang` en la External API
+
+**Síntoma**: Errores en logs del navegador/servidor:
+```
+lang => Invalid parameter value detected: Invalid external api parameter:
+the value is "es", the server was expecting "lang" type
+```
+
+**Causa raíz**: El contenedor nuevo usaba un `moodle-data` vacío. Aunque el tema Moove estaba en el código y la BD tenía `lang=es`, faltaba:
+- El paquete de idioma español: `moodle-data/lang/es/`
+- Las imágenes y caché del tema: `moodle-data/temp/theme/moove/`
+- Los archivos subidos por usuarios: `moodle-data/filedir/`
+
+**Resolución**: Al montar el `moodle-data` completo del contenedor anterior, todos los recursos (idiomas, imágenes, archivos) quedaron disponibles y el error desapareció.
+
+### 7.6. Variables de entorno y configuración del `.env`
+
+El `.env` se configuró fusionando datos de dos fuentes:
+- **MariaDB 10.11.16** (`/var/moodle-docker-deploy/mariadb-10.11.16/.env`): credenciales de BD, puerto, red.
+- **Contenedor anterior** (`/var/moodle-docker-deploy/www.fpvirtualaragon.es/.env`): dominio, SSL, admin, SMTP, contraseñas FPD, Blackboard, etc.
+
+**Valores clave establecidos**:
+```env
+MOODLE_DB_HOST=moodle_mariadb_10.11.16
+MOODLE_DB_PORT=3306
+MOODLE_DB_NAME=moodle
+MOODLE_DB_USER=moodle
+MOODLE_DB_PASSWORD=moodle_password
+
+MOODLE_URL=https://redestel.fpvirtualaragon.es
+VIRTUAL_HOST=redestel.fpvirtualaragon.es
+SSL_EMAIL=juandacorreo@gmail.com
+
+MOODLE_ADMIN_USER=admin
+MOODLE_ADMIN_PASSWORD=AeducAR#2020
+MOODLE_ADMIN_EMAIL=pruizs@campusdigitalfp.com
+
+INSTALL_TYPE=upgrade
+VERSION=4.1.19
+```
+
+**Por qué `INSTALL_TYPE=upgrade`**: La base de datos ya contenía datos de la instancia anterior (Moodle 4.1.3). El `entrypoint.sh` detecta que la BD está instalada y ejecuta `upgrade.php --non-interactive --allow-unstable` para migrar el esquema de 4.1.3 a 4.1.19.
+
+---
+
+## 8. Conclusión
+
+### Estado final de la migración (abril 2026)
+
+El nuevo contenedor (`fpd-moodle` / `fpd-web`) está funcionando en producción/testing con:
+- ✅ Imagen Docker construida con `moodle-code` copiado del contenedor anterior.
+- ✅ Conexión a MariaDB 10.11.16 vía red Docker interna.
+- ✅ `moodle-data` montado como volumen compartido desde el contenedor anterior.
+- ✅ Tema Moove activo con personalizaciones FPD.
+- ✅ Idioma español funcionando.
+- ✅ Upgrade de Moodle 4.1.3 → 4.1.19 completado.
+
+### Trabajo futuro (pendiente)
+
+Para alcanzar el objetivo original de este estudio (imagen autocontenida sin `moodle-code` externo), queda por hacer:
+
+1. **Refactorizar `Dockerfile`** para descargar Moodle core oficial y clonar plugins desde git (secciones 2-5).
+2. **Crear carpeta `custom/`** con los scripts PHP de la raíz (`decalogo`, `faqs`, `private-reports`, `soporte`, `userpix`).
+3. **Simplificar `init-scripts/new-install/plugins.sh`** para que solo configure plugins, no los descargue.
+4. **Validar** que los plugins faltantes del AGENTS.md (`format_tiles`, `atto_fontsize`, `atto_fontfamily`, `block_configurable_reports`) sean necesarios o se instalen vía web.
+5. **Preparar el `docker-compose.yml`** para soportar volúmenes nombrados de Docker en lugar de bind mounts, facilitando la migración a GlusterFS/Galera.
 
 ---
 

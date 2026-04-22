@@ -1,199 +1,250 @@
-## 1. Análisis del proyecto y los scripts
+## 1. Análisis del proyecto y arquitectura actual
 
-### Arquitectura general
-El proyecto es un despliegue **Docker Compose** de Moodle 4.1.3 preparado para diferentes tipos de centros educativos (IES, CEIP, CPEPA, CPI, FPD, etc.). Se compone de:
+> Fecha de actualización: 2026-04-21
+> Este documento refleja el estado del proyecto `new-moodle` tras la migración que sustituye al contenedor `www.fpvirtualaragon.es`.
 
-| Componente | Descripción |
-|------------|-------------|
-| **Servicios Docker** | `redis` (caché/sesiones), `web` (nginx:latest) y `moodle` (PHP-FPM basado en `cateduac/moodle:4.1.3-nginx-fpm-unoconv`). |
-| **Código fuente** | Carpeta `./moodle-code/` (montada en nginx y en el contenedor PHP-FPM). |
-| **Datos de Moodle** | Carpeta `./moodle-data/` (montada en `/var/www/moodledata`). |
-| **Base de datos** | **No está definida en el `docker-compose.yml`**. Se asume una BD externa (MariaDB/MySQL) accesible mediante las variables de entorno. |
-| **Proxy inverso** | Usa una red externa `nginx-proxy_frontend`, lo que indica que hay un proxy (p. ej. `nginx-proxy` o Traefik) gestionando el tráfico HTTPS y los certificados. |
-| **Configuraciones** | `./nginx/default.conf`, `./fpm-conf/`, `./php-conf/` (opcache, uploads, desactivación de APCu). |
-| **Inicialización** | `./init-scripts/` contiene la lógica de primer arranque y actualizaciones. |
+### 1.1. Arquitectura general
 
-### Flujo de los scripts de inicialización
-El `docker-compose.yml` monta `./init-scripts` en `/init-scripts` del contenedor Moodle. La imagen base (`cateduac/moodle`) ejecuta automáticamente `init.sh` en su entrypoint al arrancar.
+El proyecto es un despliegue **Docker Compose** de Moodle 4.1.19, preparado para la Formación Profesional a Distancia de Aragón (FPD). Se compone de:
 
-**`init.sh`** (orquestador):
-- Lee las variables `INSTALL_TYPE` (`new-install` o `upgrade`) y `SCHOOL_TYPE` (`IES`, `CEIP`, `FPD`, `VACIO`…).
-- Ejecuta secuencialmente estos scripts (solo si tienen permiso de ejecución):
-  1. `moodle.sh` → configura el sitio.
-  2. `plugins.sh` → instala plugins vía `moosh`.
-  3. `import_${SCHOOL_TYPE}_categories_and_courses.sh` → restaura las categorías y los cursos desde los archivos `.mbz`.
-  4. `theme.sh` → configura el tema Moove con personalizaciones específicas.
+| Componente | Descripción | Decisión clave |
+|------------|-------------|----------------|
+| **Servicios Docker** | `redis` (caché/sesiones), `web` (nginx:latest) y `moodle` (imagen propia basada en `php:8.1-fpm`). | Imagen propia en lugar de imagen externa `cateduac/moodle`, para tener control total del build y del código empaquetado. |
+| **Código fuente** | Carpeta `./moodle-code/` copiada **dentro de la imagen** en tiempo de build (`COPY moodle-code /var/www/html`). | En esta migración se copió el `moodle-code` del contenedor anterior para garantizar concordancia total de plugins y temas. En el futuro se refactorizará para descargar core + plugins desde git. |
+| **Datos de Moodle** | Carpeta `./moodle-data/` montada como volumen. En esta migración, apunta al `moodle-data` del contenedor anterior. | Se eligió montaje compartido porque (a) es un servidor de testing, (b) en producción se migrará a un sistema de replicación tipo GlusterFS/Galera. |
+| **Base de datos** | **MariaDB 10.11.16 externa**, conectada vía red Docker `mariadb_10.11.16_network`. | No se usa el perfil `with-db` (BD interna). Se reutiliza el contenedor de BD existente para evitar duplicar infraestructura y garantizar persistencia de datos. |
+| **Proxy inverso** | Red externa `nginx-proxy_frontend`, gestionada por `nginx-proxy` + Let's Encrypt. | Se mantiene el mismo proxy ya configurado para el contenedor anterior. |
+| **Configuraciones** | `./nginx/default.conf`, `./fpm-conf/`, `./php-conf/` (opcache, uploads, desactivación de APCu). | Sin cambios respecto al diseño original del proyecto. |
+| **Inicialización** | `./init-scripts/` con lógica de primer arranque (`new-install`) y actualizaciones (`upgrade`). | Se usó `INSTALL_TYPE=upgrade` porque la BD ya contenía datos del Moodle 4.1.3 anterior. |
 
-#### Scripts de `new-install/` (se ejecutan la primera vez)
-- **`moodle.sh`**: Configura todo el sitio mediante `moosh` (SMTP, webservices, idiomas, usuarios de prueba, roles personalizados como `gestora` o `familiar`, notificaciones, app móvil, políticas de privacidad, etc.). Diferencia comportamiento entre FPD y el resto de centros.
-- **`plugins.sh`**: Instala automáticamente plugins desde el repositorio oficial de Moodle (`format_tiles`, `mod_board`, `local_mail`, `block_xp`, `mod_pdfannotator`, etc.) y los configura.
-- **`import_*_categories_and_courses.sh`**: Crea la jerarquía de categorías y restaura decenas de cursos desde `./init-scripts/mbzs/`. Por ejemplo, para `IES` crea categorías de ESO, Bachillerato, PMAR, etc., y restaura más de 170 cursos.
-- **`theme.sh`**: Importa ajustes del tema Moove, copia fuentes (Boo), mustaches personalizadas (`frontpage.mustache`, `footer.mustache`) y añade CSS/SCSS custom.
+### 1.2. Diagrama de red
 
-#### Scripts de `upgrade/` (se ejecutan al actualizar)
-- **`moodle.sh`**: Lanza `admin/cli/upgrade.php` con `expect` para automatizar la respuesta, y aplica ajustes post-upgrade (formato por defecto, desactivar analytics, etc.).
-- **`plugins.sh`**: Reinstala o actualiza plugins, desinstala los obsoletos.
-- **`theme.sh`**: Reaplica la configuración del tema.
-
-#### Otros scripts útiles
-- **`backup_to_mbz_moodle_courses.sh`**: Exporta **todos** los cursos de la plataforma a archivos `.mbz` usando `moosh course-backup`. Útil para migraciones o backups masivos.
+```
+┌─────────────────────────────────────────────────────────────┐
+│  Servidor host                                              │
+│  ─────────────────────────────────────────────────────────  │
+│                                                             │
+│  ┌──────────────────┐      ┌─────────────────────────────┐ │
+│  │ nginx-proxy      │      │  Moodle-Docker (nuevo)      │ │
+│  │ (HTTPS/SSL)      │◄────►│  ┌───────┐  ┌───────────┐   │ │
+│  └──────────────────┘      │  │  web  │  │  moodle   │   │ │
+│         ▲                  │  │nginx  │  │php-fpm    │   │ │
+│         │                  │  └───┬───┘  └─────┬─────┘   │ │
+│         │                  │      │            │         │ │
+│  Usuarios finales          │  phpsocket    moodle-data  │ │
+│                            │      │            │         │ │
+│  ┌──────────────────┐      │  ┌───▼────────────▼───┐     │ │
+│  │ mariadb_10.11.16 │◄─────┘  │   redis:7-alpine   │     │ │
+│  │ (red Docker)     │         └────────────────────┘     │ │
+│  └──────────────────┘                                       │
+│                                                             │
+│  (moodle-data montado desde contenedor anterior)            │
+│  (moodle-code empaquetado en la imagen Docker)              │
+└─────────────────────────────────────────────────────────────┘
+```
 
 ---
 
-## 2. Pasos para crear una instancia de Moodle ahora
+## 2. Decisiones técnicas y porqué se tomaron
 
-Para levantar una instancia nueva desde cero con este proyecto:
+### 2.1. Uso de base de datos externa (MariaDB 10.11.16)
 
-1. **Revisar/crear el archivo `.env`**  
-   Debe contener al menos:
-   ```env
-   VIRTUAL_HOST=miinstancia.ejemplo.es
-   SSL_EMAIL=admin@ejemplo.es
-   MOODLE_URL=https://miinstancia.ejemplo.es
-   MOODLE_DB_HOST=IP_O_HOST_DB
-   MOODLE_DB_NAME=moodle
-   MOODLE_MYSQL_USER=moodleuser
-   MOODLE_MYSQL_PASSWORD=...
-   MOODLE_ADMIN_USER=admin
-   MOODLE_ADMIN_PASSWORD=...
-   MOODLE_ADMIN_EMAIL=...
-   MOODLE_LANG=es
-   MOODLE_SITE_NAME="Mi Moodle"
-   MOODLE_SITE_FULLNAME="Mi Moodle Completo"
-   SSL_PROXY=true
-   INSTALL_TYPE=new-install
-   SCHOOL_TYPE=IES        # o CEIP, FPD, VACIO, etc.
-   VERSION=4.1.3
-   # ... resto de variables SMTP, contraseñas de gestor, etc.
-   ```
+**Decisión**: No usar el perfil `with-db` y conectar a un contenedor MariaDB ya existente.
 
-2. **Asegurar la red externa del proxy**  
+**Por qué**:
+- La infraestructura de BD ya estaba desplegada (`moodle_mariadb_10.11.16`).
+- Replicar la BD en un nuevo contenedor habría implicado migrar datos y duplicar recursos.
+- El acceso por red Docker interna (nombre de contenedor + puerto 3306) es más seguro y robusto que exponer puertos al host.
+
+**Implementación**:
+- `MOODLE_DB_HOST=moodle_mariadb_10.11.16` en `.env`.
+- Red externa `mariadb_10.11.16_network` añadida al servicio `moodle` en `docker-compose.yml`.
+- El `Dockerfile` no instala cliente MariaDB innecesario; solo las extensiones PHP (`mysqli`, `pdo_mysql`).
+
+### 2.2. `moodle-code` empaquetado en la imagen
+
+**Decisión**: Copiar el `moodle-code` completo del contenedor anterior al contexto de build y luego hacer `COPY` en el `Dockerfile`.
+
+**Por qué**:
+- El build de la imagen requiere que exista `moodle-code` en el contexto (líneas 72-77 del `Dockerfile`).
+- Copiarlo del contenedor anterior garantiza que todos los plugins de terceros, el tema Moove, los scripts custom (`decalogo/`, `soporte/`, etc.) y cualquier parche estén presentes.
+- Es una solución pragmática para una migración urgente. El estudio `Estudio-moodle-code-to-container.md` detalla cómo refactorizar esto a una imagen 100% autocontenida en el futuro.
+
+**Riesgo mitigado**: Si se hubiera usado un `moodle-code` vacío o genérico, faltarían plugins y el sitio no funcionaría con la BD existente.
+
+### 2.3. `moodle-data` como volumen compartido (no copiado)
+
+**Decisión**: Montar el `moodle-data` del contenedor anterior en `/var/www/moodledata` en lugar de copiarlo al directorio del proyecto.
+
+**Por qué**:
+- El usuario confirmó que el servidor es de **testing**.
+- En producción, el `moodle-data` residirá en un sistema de replicación tipo **GlusterFS/Galera**, por lo que el modelo de volumen compartido es arquitectónicamente coherente.
+- Evita duplicar ~10-20 GB de archivos subidos, caché e idiomas.
+
+**Restricción crítica**: Nunca levantar el contenedor anterior y el nuevo simultáneamente. Moodle no soporta que dos instancias compartan el mismo `dataroot`.
+
+### 2.4. Corrección de `libaio1` en el Dockerfile
+
+**Decisión**: Eliminar el paquete `libaio1` de la instalación de dependencias del sistema.
+
+**Por qué**:
+- La imagen base `php:8.1-fpm` actual usa Debian Trixie (rama en desarrollo), donde el paquete `libaio1` ha desaparecido de los repositorios.
+- Moodle con MariaDB no requiere `libaio1` (es exclusivo de Oracle DB).
+- El build fallaba con `exit code 100` por este paquete.
+
+### 2.5. `INSTALL_TYPE=upgrade`
+
+**Decisión**: Usar `upgrade` en lugar de `new-install`.
+
+**Por qué**:
+- La base de datos `moodle` en MariaDB 10.11.16 ya contenía datos de la instancia anterior (Moodle 4.1.3).
+- El `entrypoint.sh` detecta la tabla `mdl_config`, ejecuta `upgrade.php --non-interactive --allow-unstable` y luego los scripts de `init-scripts/upgrade/`.
+- Usar `new-install` habría intentado crear tablas duplicadas y fallado.
+
+---
+
+## 3. Problemas encontrados y resoluciones
+
+| Problema | Causa | Solución |
+|----------|-------|----------|
+| `failed to compute cache key: "/moodle-code": not found` | El directorio `moodle-code` no existía en el contexto de build. | Copiar `moodle-code` del contenedor anterior al proyecto. |
+| `E: Unable to locate package libaio1` | Debian Trixie ya no tiene este paquete. | Eliminar `libaio1` del `Dockerfile`. |
+| `$CFG->dataroot is not writable` | El `moodle-data` local creado por Docker pertenecía a `root:root`. | Cambiar a montar el `moodle-data` del contenedor anterior (`www-data:www-data`). |
+| Tema Moove no se veía / idioma español fallaba | El `moodle-data` nuevo estaba vacío; faltaban `lang/es/`, `temp/theme/moove/` y `filedir/`. | Montar el `moodle-data` completo del contenedor anterior, que incluye todos los recursos. |
+| Error `lang` en External API (`Invalid external api parameter`) | El cliente JS enviaba `lang=es` pero el servidor no encontraba el paquete de idioma en el filesystem. | Resuelto al usar el `moodle-data` correcto con `lang/es/` presente. |
+
+---
+
+## 4. Flujo de los scripts de inicialización (estado actual)
+
+El `entrypoint.sh` ejecuta el siguiente flujo en cada arranque:
+
+1. **Restaurar código si bind mount vacío**: si `/var/www/html/config.php` no existe pero existe `/usr/src/moodle/config-dist.php`, copia el código empaquetado en la imagen.
+2. **Esperar a la base de datos**: bucle hasta que `moodle_mariadb_10.11.16:3306` responda.
+3. **Comprobar si Moodle ya está instalado**: consulta si existe la tabla `mdl_config`.
+4. **Si ya está instalado y `INSTALL_TYPE=upgrade`**:
+   - Ejecuta `admin/cli/upgrade.php --non-interactive --allow-unstable`.
+   - Ejecuta `/init-scripts/init.sh`, que lanza secuencialmente:
+     1. `upgrade/moodle.sh` (expect + ajustes post-upgrade)
+     2. `upgrade/plugins.sh` (reinstalación de plugins)
+     3. `upgrade/theme.sh` (reaplicación de tema Moove + SCSS custom)
+5. **Purgar cachés** y arrancar `php-fpm`.
+
+> **Nota**: Los scripts de `new-install/` (`moodle.sh`, `plugins.sh`, `import_FPD_categories_and_courses.sh`, `theme.sh`) **no se ejecutan** en este despliegue porque `INSTALL_TYPE=upgrade`. Quedan disponibles para futuras instalaciones limpias.
+
+---
+
+## 5. Inventario de plugins y componentes no estándar
+
+### Plugins de terceros empaquetados en la imagen (detectados en moodle-code)
+
+| Tipo | Plugin | Componente |
+|------|--------|-----------|
+| Módulo | Attendance | `mod_attendance` |
+| Módulo | Board | `mod_board` |
+| Módulo | Checklist | `mod_checklist` |
+| Módulo | Choice Group | `mod_choicegroup` |
+| Módulo | Google Meet | `mod_googlemeet` |
+| Módulo | PDF Annotator | `mod_pdfannotator` |
+| Bloque | Completion Progress | `block_completion_progress` |
+| Bloque | Grade Me | `block_grade_me` |
+| Bloque | Sharing Cart | `block_sharing_cart` |
+| Bloque | Level Up XP | `block_xp` |
+| Local | EducaAragon | `local_educaaragon` |
+| Local | Mail | `local_mail` |
+| Local | Reminders | `local_reminders` |
+| Tema | Moove | `theme_moove` |
+| Informe | Course Statistics | `report_coursestats` |
+| Tipo pregunta | GapFill | `qtype_gapfill` |
+| Regla cuestionario | One Session | `quizaccess_onesession` |
+| Editor Atto | Components for Learning | `atto_c4l` |
+| Editor Atto | Fullscreen | `atto_fullscreen` |
+| Condición disponibilidad | Level Up XP | `availability_xp` |
+
+### Scripts/aplicaciones PHP custom (no plugins)
+
+Estos directorios residen en la raíz del documento web (`/var/www/html/`) y deben gestionarse manualmente en futuras refactorizaciones:
+
+- `decalogo/` — Imágenes del decálogo metodológico FP Virtual.
+- `faqs/` — Imágenes y recursos de preguntas frecuentes.
+- `private-reports/` — Scripts PHP internos (`docentes.php`, `inspeccion.php`, `jefaturas.php`, `mensajeria.php`).
+- `soporte/` y `soporte2/` — Formularios de soporte con captcha.
+- `userpix/` — Gestión de avatares.
+
+---
+
+## 6. Pasos para replicar este despliegue en otro servidor
+
+Si fuera necesario levantar esta misma instancia en otro host (p. ej. con GlusterFS):
+
+1. **Clonar el repositorio** `new-moodle`.
+2. **Copiar el `moodle-code`** del backup o del contenedor anterior al directorio del proyecto.
+3. **Configurar `.env`** con las credenciales de la BD externa y el dominio correspondiente.
+4. **Modificar `docker-compose.yml`**:
+   - Ajustar la ruta del volumen `moodle-data` al punto de montaje de GlusterFS.
+   - Asegurar que la red externa de la BD (`mariadb_10.11.16_network` o equivalente) esté definida.
+5. **Build y despliegue**:
    ```bash
-   docker network create nginx-proxy_frontend
+   docker compose up -d --build
    ```
-
-3. **Asegurar que la base de datos está accesible**  
-   La BD debe existir, estar vacía y ser accesible desde el host donde correrá el contenedor `moodle`. Asegúrate de que el usuario tenga permisos de lectura/escritura.
-
-4. **Poner permisos de ejecución a los scripts necesarios**  
-   ```bash
-   chmod +x init-scripts/new-install/*.sh
-   # o para upgrade:
-   # chmod +x init-scripts/upgrade/*.sh
-   ```
-
-5. **Levantar los contenedores**  
-   ```bash
-   docker compose up -d
-   ```
-
-6. **Verificar la instalación**  
-   Sigue los logs del contenedor `moodle`:
+6. **Verificar logs**:
    ```bash
    docker compose logs -f moodle
    ```
-   Verás cómo se ejecutan los scripts de `new-install`. Este proceso puede tardar varios minutos porque descarga e instala plugins y restaura todos los cursos desde los `.mbz`.
-
-7. **Post-instalación**  
-   Los scripts se desactivan automáticamente al perder el permiso de ejecución (comentario en `init.sh`). Sin embargo, como los volúmenes son *bind mounts*, el cambio de permisos persiste en tu disco local. Si reinicias el contenedor, no volverán a ejecutarse salvo que les vuelvas a dar `chmod +x`.
 
 ---
 
-## 3. Pasos para transformar esta instalación completa a un contenedor
+## 7. Notas para el paso a producción con GlusterFS/Galera
 
-La instalación ya usa Docker, pero depende de **bind mounts** locales (`moodle-code`, `moodle-data`, `init-scripts`). Si lo que buscas es una imagen **autocontenida y portable** (o incluso un único contenedor), tienes dos enfoques:
+### `moodle-data`
+- **Actual**: bind mount a directorio local del host (`/var/moodle-docker-deploy/www.fpvirtualaragon.es/moodle-data`).
+- **Futuro**: volumen Docker nombrado o bind mount a un filesystem GlusterFS replicado.
+- **Requisito**: El filesystem debe soportar bloqueos de archivo (file locking) para que la caché de Moodle (`muc/`, `cache/`) funcione correctamente.
 
-### Opción A: Docker Compose completo y reproducible (Recomendado)
-El enfoque profesional es incluir la base de datos en el propio `docker-compose.yml` y construir una **imagen propia** que incluya el código y los scripts, eliminando la dependencia de carpetas locales.
+### Base de datos
+- **Actual**: MariaDB 10.11.16 en contenedor Docker individual.
+- **Futuro**: Clúster Galera (multi-master) o replicación master-slave.
+- **Consideración**: Moodle requiere que las tablas usen `InnoDB` (ya es el default en MariaDB 10.11).
 
-**Pasos a seguir:**
+### Imagen Docker
+- **Actual**: build local con `moodle-code` copiado manualmente.
+- **Futuro**: build automatizado en CI/CD que descargue Moodle core + plugins desde git y empaquete los scripts custom.
 
-1. **Crear un `Dockerfile`** en la raíz del proyecto:
-   ```dockerfile
-   FROM cateduac/moodle:4.1.3-nginx-fpm-unoconv
-   
-   # Copiar el código de Moodle ya configurado
-   COPY moodle-code /var/www/html
-   
-   # Copiar los scripts de inicialización
-   COPY init-scripts /init-scripts
-   
-   # Copiar configuraciones de PHP-FPM y PHP
-   COPY fpm-conf /usr/local/etc/php-fpm.d
-   COPY php-conf/opcache.ini /usr/local/etc/php/conf.d/opcache.ini
-   COPY php-conf/uploads.ini /usr/local/etc/php/conf.d/uploads.ini
-   COPY php-conf/zzz-disable-apcu.ini /usr/local/etc/php/conf.d/zzz-disable-apcu.ini
-   
-   # Ajustar permisos
-   RUN chown -R www-data:www-data /var/www/html /var/www/moodledata /init-scripts
-   ```
+### Proxy y SSL
+- El proxy inverso (`nginx-proxy`) gestiona automáticamente los certificados Let's Encrypt.
+- Al migrar a otro servidor, solo hay que asegurar que la red `nginx-proxy_frontend` exista y que el nuevo contenedor `web` se conecte a ella.
 
-2. **Añadir el servicio de base de datos al `docker-compose.yml`**:
-   ```yaml
-   services:
-     db:
-       image: mariadb:10.6
-       environment:
-         MYSQL_ROOT_PASSWORD: rootpass
-         MYSQL_DATABASE: moodle
-         MYSQL_USER: moodleuser
-         MYSQL_PASSWORD: moodlepass
-       volumes:
-         - db_data:/var/lib/mysql
-       networks:
-         - moodle-internal
-   
-     moodle:
-       build: .          # Usa el Dockerfile que acabas de crear
-       # ... resto de configuración ...
-       environment:
-         MOODLE_DB_HOST: db
-       networks:
-         - moodle-internal
-         - nginx-proxy_frontend
-   ```
-   Y usar un volumen Docker nombrado para `moodle-data` en lugar del bind mount:
-   ```yaml
-   volumes:
-     - moodle_data:/var/www/moodledata
-   ```
+---
 
-3. **Eliminar bind mounts innecesarios**  
-   Sustituye `./moodle-code:/var/www/html` y `./init-scripts:/init-scripts` por la imagen construida. Solo mantén bind mounts para configuraciones que cambies frecuentemente (nginx) o usa `configs` de Docker Swarm/Compose.
+## 8. Resumen de archivos modificados en esta migración
 
-4. **Empaquetar y distribuir**  
-   ```bash
-   docker compose build
-   docker tag proyecto-moodle:latest mi-registry/moodle:prod
-   docker push mi-registry/moodle:prod
-   ```
+| Archivo | Cambio realizado |
+|---------|-----------------|
+| `.env` | Creado desde `.env.example` fusionando datos del contenedor anterior (dominio, admin, SMTP, contraseñas FPD/Blackboard) y de MariaDB 10.11.16 (host, credenciales). `INSTALL_TYPE=upgrade`, `VERSION=4.1.19`. |
+| `docker-compose.yml` | `MOODLE_DB_HOST` y `MOODLE_DB_PORT` pasan a leer variables de entorno (antes hardcodeados a `db` y `3306`). Añadida red externa `mariadb_10.11.16_network`. Volumen `moodle-data` apunta al directorio del contenedor anterior. |
+| `Dockerfile` | Eliminado paquete `libaio1` de la lista de dependencias del sistema. |
+| `moodle-code/` | Copiado completamente desde `/var/moodle-docker-deploy/www.fpvirtualaragon.es/moodle-code/` para garantizar concordancia de plugins y temas. |
+| `Estudio-moodle-code-to-container.md` | Documento creado con análisis de plugins y estrategia de refactorización futura. |
 
-### Opción B: Contenedor monolítico (Todo-en-uno)
-Si necesitas que todo corra en **un único contenedor** (por ejemplo, para un entorno de demostración offline), puedes hacerlo, aunque es un *anti-pattern* en contenedores.
+---
 
-**Pasos a seguir:**
+## 9. Estado operativo actual
 
-1. **Crear un `Dockerfile` multicomponente**:
-   - Base: Debian/Ubuntu o la imagen actual de `cateduac/moodle`.
-   - Instalar `mariadb-server` y `supervisor`.
-   - Copiar `moodle-code`, `moodle-data` y un dump SQL de la base de datos.
-   - Configurar `supervisord` para levantar 3 procesos: MariaDB, PHP-FPM y Nginx.
+```bash
+# Contenedores activos
+fpd-moodle    Up  (php-fpm 9000)
+fpd-web       Up  (nginx 80)
+fpd-redis     Up  (redis 6379, healthy)
 
-2. **Incluir un script de entrypoint** que:
-   - Inicie MariaDB.
-   - Cree la base de datos si no existe (importando el dump).
-   - Ejecute los scripts de `init-scripts` si es la primera vez.
-   - Lance `supervisord`.
+# Base de datos
+moodle_mariadb_10.11.16    Up  (3306/tcp, healthy)
 
-3. **Limitaciones**:
-   - El rendimiento será inferior.
-   - La escalabilidad es nula.
-   - Los datos de la BD dentro del contenedor no persisten salvo que uses volúmenes.
+# Proxy
+nginx-proxy                Up
+nginx-proxy-lets-encrypt   Up
 
-### Resumen recomendado
-| Escenario | Enfoque recomendado |
-|-----------|---------------------|
-| **Producción / Escalable** | Opción A: Construir una imagen propia con el código + scripts, añadir `db` al `docker-compose.yml` y usar volúmenes Docker para datos y BD. |
-| **Demo / Offline / Portátil** | Opción B: Contenedor monolítico con `supervisord`, pero teniendo claro que es solo para pruebas. |
+# Acceso web
+https://redestel.fpvirtualaragon.es
+```
 
-Si me indicas cuál es tu objetivo final (producción en la nube, demo local, migración a Kubernetes, etc.), puedo detallarte el `Dockerfile` y el `docker-compose.yml` exactos que necesitas.
+> **Última verificación**: Tema Moove activo, idioma español (`es`) funcionando, login operativo, y upgrade de esquema de BD completado sin errores.
