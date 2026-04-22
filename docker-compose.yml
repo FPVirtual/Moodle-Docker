@@ -71,7 +71,7 @@ services:
       BLACKBOARD_KEY: "${BLACKBOARD_KEY}"
       BLACKBOARD_SECRET: "${BLACKBOARD_SECRET}"
     volumes:
-      - /var/moodle-docker-deploy/www.fpvirtualaragon.es/moodle-data:/var/www/moodledata
+      - ./moodle-data:/var/www/moodledata
       - phpsocket:/sock
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
@@ -97,7 +97,7 @@ services:
       LETSENCRYPT_EMAIL: "${SSL_EMAIL}"
     volumes:
       - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
-      - /var/moodle-docker-deploy/www.fpvirtualaragon.es/moodle-data:/var/www/moodledata:ro
+      - ./moodle-data:/var/www/moodledata:ro
       - phpsocket:/sock
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro

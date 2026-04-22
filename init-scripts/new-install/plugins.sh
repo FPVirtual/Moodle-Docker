@@ -119,7 +119,15 @@ PLUGINS=(
 
 for PLUGIN in "${PLUGINS[@]}"
 do
-    moosh plugin-list | grep ${PLUGIN} | grep ${VERSION_MINOR} >/dev/null && echo "trying to install ${PLUGIN} ..." && moosh plugin-install -d ${PLUGIN} && actions_asociated_to_plugin ${PLUGIN} || echo "${PLUGIN} is not available for ${VERSION_MINOR}"
+    # Si el plugin ya está presente en el código (clonado en la imagen), moosh plugin-install lo saltará.
+    # De todos modos ejecutamos actions_asociated_to_plugin para aplicar la configuración post-instalación.
+    if moosh plugin-list | grep ${PLUGIN} | grep ${VERSION_MINOR} >/dev/null; then
+        echo "trying to install ${PLUGIN} ..."
+        moosh plugin-install -d ${PLUGIN} || echo "${PLUGIN} already present or install skipped"
+    else
+        echo "${PLUGIN} is not available in remote list for ${VERSION_MINOR}, checking local..."
+    fi
+    actions_asociated_to_plugin ${PLUGIN}
 done
 
 echo >&2 "Plugins installed!"

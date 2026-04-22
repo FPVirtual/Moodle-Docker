@@ -68,13 +68,48 @@ RUN git clone https://github.com/tmuras/moosh.git /opt/moosh \
 # Crear directorio de datos de Moodle
 RUN mkdir -p /var/www/moodledata && chown -R www-data:www-data /var/www/moodledata
 
-# Copiar código fuente de Moodle
-COPY moodle-code /var/www/html
-RUN chown -R www-data:www-data /var/www/html
+# Descargar Moodle 4.1.19 oficial desde GitHub
+ARG MOODLE_VERSION=4.1.19
+RUN curl -L https://github.com/moodle/moodle/archive/refs/tags/v${MOODLE_VERSION}.tar.gz | tar xz -C /tmp \
+    && mv /tmp/moodle-* /usr/src/moodle \
+    && cp -r /usr/src/moodle/* /var/www/html/ \
+    && chown -R www-data:www-data /var/www/html /usr/src/moodle
 
-# Copiar también a /usr/src/moodle como backup para bind mounts vacíos
-COPY moodle-code /usr/src/moodle
-RUN chown -R www-data:www-data /usr/src/moodle
+# Instalar plugins de terceros desde git (ramas compatibles con Moodle 4.1)
+# Nota: Se clonan desde repos oficiales/mantenidos. Verificar compatibilidad en moodle.org/plugins
+RUN cd /var/www/html/mod && git clone --depth 1 --branch MOODLE_401_STABLE https://github.com/danmarsden/moodle-mod_attendance.git attendance \
+    && cd /var/www/html/mod && git clone --depth 1 https://github.com/basbruss/moodle-mod_board.git board \
+    && cd /var/www/html/mod && git clone --depth 1 --branch main https://github.com/davosmith/moodle-mod_checklist.git checklist \
+    && cd /var/www/html/mod && git clone --depth 1 https://github.com/ndunand/moodle-mod_choicegroup.git choicegroup \
+    && cd /var/www/html/mod && git clone --depth 1 https://github.com/gerardkcohen/moodle-mod_googlemeet.git googlemeet \
+    && cd /var/www/html/mod && git clone --depth 1 https://github.com/rwirth/moodle-mod_pdfannotator.git pdfannotator \
+    && cd /var/www/html/blocks && git clone --depth 1 --branch MOODLE_401_STABLE https://github.com/deraadt/Moodle-block_completion_progress.git completion_progress \
+    && cd /var/www/html/blocks && git clone --depth 1 --branch master https://github.com/remotelearner/Moodle-block_grade_me.git grade_me \
+    && cd /var/www/html/blocks && git clone --depth 1 https://github.com/fruitl00p/Moodle-block_sharing_cart.git sharing_cart \
+    && cd /var/www/html/blocks && git clone --depth 1 https://github.com/FMCorz/moodle-block_xp.git xp \
+    && cd /var/www/html/local && git clone --depth 1 https://github.com/Syxton/moodle-local_mail.git mail \
+    && cd /var/www/html/local && git clone --depth 1 https://github.com/Isuru-Madusanka/moodle-local_reminders.git reminders \
+    && cd /var/www/html/theme && git clone --depth 1 --branch MOODLE_401_STABLE https://github.com/willianmano/moodle-theme_moove.git moove \
+    && cd /var/www/html/report && git clone --depth 1 https://github.com/jleyva/moodle-report_coursestats.git coursestats \
+    && cd /var/www/html/question/type && git clone --depth 1 https://github.com/gbateson/moodle-qtype_gapfill.git gapfill \
+    && cd /var/www/html/mod/quiz/accessrule && git clone --depth 1 https://github.com/safatman/moodle-quizaccess_onesession.git onsession \
+    && cd /var/www/html/lib/editor/atto/plugins && git clone --depth 1 https://github.com/dthies/moodle-atto_c4l.git c4l \
+    && cd /var/www/html/lib/editor/atto/plugins && git clone --depth 1 https://github.com/dthies/moodle-atto_fullscreen.git fullscreen \
+    && cd /var/www/html/availability/condition && git clone --depth 1 https://github.com/FMCorz/moodle-availability_xp.git xp \
+    && cd /var/www/html/course/format && git clone --depth 1 --branch main https://github.com/deferredreward/moodle-format_tiles.git tiles \
+    && cd /var/www/html/blocks && git clone --depth 1 https://github.com/jleyva/moodle-block_configurablereports.git configurable_reports \
+    && cd /var/www/html/lib/editor/atto/plugins && git clone --depth 1 https://github.com/andrewnicols/moodle-atto_fontsize.git fontsize \
+    && cd /var/www/html/lib/editor/atto/plugins && git clone --depth 1 https://github.com/andrewnicols/moodle-atto_fontfamily.git fontfamily \
+    && chown -R www-data:www-data /var/www/html
+
+# Copiar scripts/aplicaciones PHP custom que viven en la raíz del documento web
+COPY custom/decalogo /var/www/html/decalogo
+COPY custom/faqs /var/www/html/faqs
+COPY custom/private-reports /var/www/html/private-reports
+COPY custom/soporte /var/www/html/soporte
+COPY custom/userpix /var/www/html/userpix
+RUN chown -R www-data:www-data /var/www/html/decalogo /var/www/html/faqs \
+    /var/www/html/private-reports /var/www/html/soporte /var/www/html/userpix
 
 # Copiar scripts de inicialización
 COPY init-scripts /init-scripts

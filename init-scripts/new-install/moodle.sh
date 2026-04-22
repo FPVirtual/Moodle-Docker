@@ -38,6 +38,7 @@ moosh config-set enableblogs 1
 
 # Set languages
 echo >&2 "Configuring languages..."
+moosh lang-install es
 moosh config-set doclang es
 moosh config-set lang es
 moosh config-set country ES
