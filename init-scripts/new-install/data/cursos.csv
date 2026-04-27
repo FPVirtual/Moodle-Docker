@@ -1,0 +1,403 @@
+category_var,shortname,fullname,visible
+general,ayuda,"Curso de ayuda",1
+general,profesorado,"Curso de Sala de profesorado",1
+general,coordinacion,"Curso de Sala de coordinación",1
+app,marketplaces,"Curso de verificación marketplaces NO BORRAR",1
+sg_ga,22002521-ADG201-639t,"Coordinación - Tutoría",1
+sg_ga,22002521-ADG201-5364,"Comunicación empresarial y atención al cliente",1
+sg_ga,22002521-ADG201-5373,"Formación y orientación laboral",1
+sg_ga,22002521-ADG201-5365,"Operaciones administrativas de compra",1
+sg_ga,22002521-ADG201-5368,"Técnica contable",1
+sg_ga,22002521-ADG201-5367,"Tratamiento informático de la información",1
+sg_ga,22002521-ADG201-5119,"Empresa en el aula",1
+sg_ga,22002521-ADG201-5114,"Empresa y Administración",1
+sg_ga,22002521-ADG201-5122,"Formación en centros de trabajo",1
+sg_ga,22002521-ADG201-5111,"Inglés  Global",1
+sg_ga,22002521-ADG201-5117,"Operaciones administrativas de recursos humanos",1
+sg_ga,22002521-ADG201-5120,"Operaciones auxiliares de gestión de tesorería",1
+sg_ga,22002521-ADG201-5118,"Tratamiento de la documentación contable",1
+se_ga,44003211-ADG201-639t,"Coordinación - Tutoría",1
+se_ga,44003211-ADG201-5364,"Comunicación empresarial y atención al cliente",1
+se_ga,44003211-ADG201-5373,"Formación y orientación laboral",1
+se_ga,44003211-ADG201-5365,"Operaciones administrativas de compra",1
+se_ga,44003211-ADG201-5368,"Técnica contable",1
+se_ga,44003211-ADG201-5367,"Tratamiento informático de la información",1
+se_ga,44003211-ADG201-5119,"Empresa en el aula",1
+se_ga,44003211-ADG201-5114,"Empresa y Administración",1
+se_ga,44003211-ADG201-5122,"Formación en centros de trabajo",1
+se_ga,44003211-ADG201-5111,"Inglés  Global",1
+se_ga,44003211-ADG201-5117,"Operaciones administrativas de recursos humanos",1
+se_ga,44003211-ADG201-5120,"Operaciones auxiliares de gestión de tesorería",1
+se_ga,44003211-ADG201-5118,"Tratamiento de la documentación contable",1
+tm_ga,50010511-ADG201-639t,"Coordinación - Tutoría",1
+tm_ga,50010511-ADG201-5364,"Comunicación empresarial y atención al cliente",1
+tm_ga,50010511-ADG201-5373,"Formación y orientación laboral",1
+tm_ga,50010511-ADG201-5365,"Operaciones administrativas de compra",1
+tm_ga,50010511-ADG201-5368,"Técnica contable",1
+tm_ga,50010511-ADG201-5367,"Tratamiento informático de la información",1
+tm_ga,50010511-ADG201-5119,"Empresa en el aula",1
+tm_ga,50010511-ADG201-5114,"Empresa y Administración",1
+tm_ga,50010511-ADG201-5122,"Formación en centros de trabajo",1
+tm_ga,50010511-ADG201-5111,"Inglés  Global",1
+tm_ga,50010511-ADG201-5117,"Operaciones administrativas de recursos humanos",1
+tm_ga,50010511-ADG201-5120,"Operaciones auxiliares de gestión de tesorería",1
+tm_ga,50010511-ADG201-5118,"Tratamiento de la documentación contable",1
+le_smr,50010314-IFC201-627t,"Coordinación - Tutoría",1
+le_smr,50010314-IFC201-5349,"Aplicaciones ofimáticas",1
+le_smr,50010314-IFC201-5355,"SMR - Formación y orientación laboral",1
+le_smr,50010314-IFC201-5359,"Lengua extranjera profesional: inglés 1",1
+le_smr,50010314-IFC201-5347,"Montaje y mantenimiento de equipos",1
+le_smr,50010314-IFC201-5351,"Redes locales",1
+le_smr,50010314-IFC201-5348,"Sistemas operativos monopuesto",1
+le_smr,50010314-IFC201-4995,"Aplicaciones Web",1
+le_smr,50010314-IFC201-4997,"SMR - Empresa e iniciativa emprendedora",1
+le_smr,50010314-IFC201-4998,"Formación en centros de trabajo",1
+le_smr,50010314-IFC201-5001,"Lengua extranjera profesional: inglés 2",1
+le_smr,50010314-IFC201-4993,"Seguridad informática",1
+le_smr,50010314-IFC201-4994,"Servicios en red",1
+le_smr,50010314-IFC201-4991,"Sistemas operativos en red",1
+le_ac,50010314-COM201-700t,"Coordinación  - Tutoría",1
+le_ac,50010314-COM201-13948,"Aplicaciones informáticas para el comercio",1
+le_ac,50010314-COM201-13947,"Dinamización del punto de venta",1
+le_ac,50010314-COM201-13946,"AC - Formación y orientación laboral",1
+le_ac,50010314-COM201-13945,"Gestión de compras",1
+le_ac,50010314-COM201-13944,"Inglés",1
+le_ac,50010314-COM201-13943,"Marketing en la actividad comercial",1
+le_ac,50010314-COM201-13942,"Procesos de venta",1
+le_ci,50010314-COM301-83t,"Coordinación_CI - Tutoría",1
+le_ci,50010314-COM301-5417,"Formación y Orientación Laboral",1
+le_ci,50010314-COM301-5409,"Gestión administrativa del comercio internacional",1
+le_ci,50010314-COM301-5407,"Gestión económica y financiera de la empresa",1
+le_ci,50010314-COM301-5405,"Inglés",1
+le_ci,50010314-COM301-5408,"Logística de almacenamiento",1
+le_ci,50010314-COM301-5406,"Transporte internacional de mercancías",1
+le_ci,50010314-COM301-5163,"Comercio digital internacional",1
+le_ci,50010314-COM301-5161,"Financiación internacional",1
+le_ci,50010314-COM301-5166,"CI - Formación en centros de trabajo",1
+le_ci,50010314-COM301-5159,"Marketing internacional",1
+le_ci,50010314-COM301-5162,"Medios de pago internacionales",1
+le_ci,50010314-COM301-5160,"Negociación internacional",1
+le_ci,50010314-COM301-5164,"Proyecto de comercio internacional",1
+le_ci,50010314-COM301-5158,"Sistema de información de mercados",1
+le_gvec,50010314-COM302-738t,"Coordinación_GVEC - Tutoría",1
+le_gvec,50010314-COM302-8412,"GVEC - Formación y orientación laboral",1
+le_gvec,50010314-COM302-7909,"Gestión económica y financiera de la empresa",1
+le_gvec,50010314-COM302-7913,"Inglés",1
+le_gvec,50010314-COM302-7910,"Logística de almacenamiento",1
+le_gvec,50010314-COM302-7908,"Marketing digital",1
+le_gvec,50010314-COM302-7907,"Políticas de marketing",1
+le_gvec,50010314-COM302-7917,"Escaparatismo y diseño de espacios comerciales",1
+le_gvec,50010314-COM302-7916,"Formación en centros de trabajo",1
+le_gvec,50010314-COM302-7918,"Gestión de productos y promociones en el punto de venta",1
+le_gvec,50010314-COM302-7926,"Investigación comercial",1
+le_gvec,50010314-COM302-7925,"Logística de aprovisionamiento",1
+le_gvec,50010314-COM302-7919,"Organización de equipos de ventas",1
+le_gvec,50010314-COM302-7928,"Proyecto de gestión de ventas y espacios comerciales",1
+le_gvec,50010314-COM302-7920,"Técnicas de venta y negociación",1
+le_tl,50010314-COM303-85t,"Coordinación - Tutoría",1
+le_tl,50010314-COM303-5430,"TL - Formación y orientación laboral",1
+le_tl,50010314-COM303-5426,"Gestión administrativa del comercio internacional",1
+le_tl,50010314-COM303-5422,"Gestión económica y financiera de la empresa de transporte y logística",1
+le_tl,50010314-COM303-5419,"Inglés",1
+le_tl,50010314-COM303-5424,"Logística de almacenamiento",1
+le_tl,50010314-COM303-5421,"Transporte internacional de mercancías",1
+le_tl,50010314-COM303-5198,"Comercialización del transporte y la logística",1
+le_tl,50010314-COM303-5206,"Formación en centros de trabajo",1
+le_tl,50010314-COM303-5195,"Gestión administrativa del transporte y la logística",1
+le_tl,50010314-COM303-5200,"Logística de aprovisionamiento",1
+le_tl,50010314-COM303-5203,"Organización del transporte de mercancías",1
+le_tl,50010314-COM303-5202,"Organización del transporte de viajeros",1
+le_tl,50010314-COM303-5204,"Proyecto de transporte y logística",1
+le_daw,50010314-IFC303-682t,"Coordinación - Tutoría",1
+le_daw,50010314-IFC303-5180,"Bases de datos",1
+le_daw,50010314-IFC303-5182,"Entornos de desarrollo",1
+le_daw,50010314-IFC303-5188,"DAW - Formación y orientación laboral",1
+le_daw,50010314-IFC303-5191,"Lengua Extranjera profesional: Inglés 1",1
+le_daw,50010314-IFC303-5178,"Lenguajes de marcas y sistemas de gestión de información",1
+le_daw,50010314-IFC303-5181,"Programación",1
+le_daw,50010314-IFC303-5179,"Sistemas informáticos",1
+le_daw,50010314-IFC303-5083,"Desarrollo web  en entorno cliente",1
+le_daw,50010314-IFC303-5084,"Desarrollo web  en entorno servidor",1
+le_daw,50010314-IFC303-5085,"Despliegue de aplicaciones web",1
+le_daw,50010314-IFC303-5086,"Diseño de interfaces Web",1
+le_daw,50010314-IFC303-5089,"DAW - Empresa e iniciativa emprendedora",1
+le_daw,50010314-IFC303-5090,"Formación en centros de trabajo",1
+le_daw,50010314-IFC303-5092,"Lengua Extranjera profesional: Inglés 2",1
+le_daw,50010314-IFC303-5087,"Proyecto de desarrollo de aplicaciones Web",1
+le_pae,50010314-IMS302-745t,"Coordinación - Tutoría",1
+le_pae,50010314-IMS302-9333,"PAE - Formación y orientación laboral",1
+le_pae,50010314-IMS302-7941,"Lengua extranjera profesional: Inglés 1",1
+le_pae,50010314-IMS302-7929,"Medios técnicos audiovisuales y escénicos",1
+le_pae,50010314-IMS302-7930,"Planificación de proyectos audiovisuales",1
+le_pae,50010314-IMS302-7933,"Planificación de proyectos de espectáculos y eventos",1
+le_pae,50010314-IMS302-7935,"Recursos expresivos audiovisuales y escénicos",1
+le_pae,50010314-IMS302-7950,"Administración y promoción de audiovisuales y espectáculos",1
+le_pae,50010314-IMS302-7952,"PAE - Empresa e iniciativa emprendedora",1
+le_pae,50010314-IMS302-7940,"Formación en centros de trabajo",1
+le_pae,50010314-IMS302-7945,"Gestión de proyectos de cine, video y multimedia",1
+le_pae,50010314-IMS302-7948,"Gestión de proyectos de espectáculos y eventos",1
+le_pae,50010314-IMS302-7946,"Gestión de proyectos de televisión y radio",1
+le_pae,50010314-IMS302-7942,"Lengua extranjera profesional: Inglés 2",1
+le_pae,50010314-IMS302-7951,"Proyecto de producción de audiovisuales y espectáculos",1
+ca_ad,50018829-ADG302-750t,"Coordinación - Tutoría",1
+ca_ad,50018829-ADG302-7855,"Comunicación y atención al cliente",1
+ca_ad,50018829-ADG302-8491,"Formación y orientación laboral",1
+ca_ad,50018829-ADG302-7851,"Gestión de la documentación jurídica y empresarial",1
+ca_ad,50018829-ADG302-7862,"Inglés",1
+ca_ad,50018829-ADG302-7853,"Ofimática y proceso de la información",1
+ca_ad,50018829-ADG302-7854,"Proceso integral de la actividad comercial",1
+ca_ad,50018829-ADG302-7852,"Recursos humanos y responsabilidad social corporativa",1
+ca_ad,50018829-ADG302-7861,"Formación en centros de trabajo",1
+ca_ad,50018829-ADG302-7871,"Gestión avanzada de la información",1
+ca_ad,50018829-ADG302-7870,"Organización de eventos empresariales",1
+ca_ad,50018829-ADG302-7869,"Protocolo empresarial",1
+ca_ad,50018829-ADG302-7872,"Proyecto de asistencia a la dirección",1
+ca_ad,50018829-ADG302-7863,"Segunda lengua extranjera: Francés",1
+ca_af,50018829-ADG301-79t,"Coordinación - Tutoría",1
+ca_af,50018829-ADG301-5297,"Comunicación y atención al cliente",1
+ca_af,50018829-ADG301-5403,"Formación y Orientación Laboral",1
+ca_af,50018829-ADG301-5194,"Gestión de la documentación jurídica y empresarial",1
+ca_af,50018829-ADG301-5193,"Inglés",1
+ca_af,50018829-ADG301-5295,"Ofimática y proceso de la información",1
+ca_af,50018829-ADG301-5296,"Proceso integral de la actividad comercial",1
+ca_af,50018829-ADG301-5294,"Recursos humanos y responsabilidad social corporativa",1
+ca_af,50018829-ADG301-5101,"Contabilidad y fiscalidad",1
+ca_af,50018829-ADG301-5152,"Formación en centros de trabajo",1
+ca_af,50018829-ADG301-5099,"Gestión de recursos humanos",1
+ca_af,50018829-ADG301-5100,"Gestión financiera",1
+ca_af,50018829-ADG301-5148,"Gestión logística y comercial",1
+ca_af,50018829-ADG301-5150,"Proyecto de administración y finanzas",1
+ca_af,50018829-ADG301-5149,"Simulación empresarial",1
+ca_lacc,50018829-QUI301-122t,"Coordinación - Tutoría",1
+ca_lacc,50018829-QUI301-5256,"Análisis químicos",1
+ca_lacc,50018829-QUI301-5259,"Ensayos fisicoquímicos",1
+ca_lacc,50018829-QUI301-5260,"Ensayos microbiológicos",1
+ca_lacc,50018829-QUI301-5266,"Formación y orientación laboral",1
+ca_lacc,50018829-QUI301-5270,"Lengua Extranjera profesional: inglés 1",1
+ca_lacc,50018829-QUI301-5255,"Muestreo y preparación de la muestra",1
+ca_lacc,50018829-QUI301-5031,"Análisis instrumental",1
+ca_lacc,50018829-QUI301-5036,"Calidad y seguridad en el laboratorio Global",1
+ca_lacc,50018829-QUI301-5041,"Empresa e iniciativa emprendedora",1
+ca_lacc,50018829-QUI301-5035,"Ensayos biotecnológicos",1
+ca_lacc,50018829-QUI301-5032,"Ensayos físicos",1
+ca_lacc,50018829-QUI301-5042,"Formación en centros de trabajo",1
+ca_lacc,50018829-QUI301-5045,"Lengua Extranjera profesional: inglés 2",1
+ca_lacc,50018829-QUI301-5039,"Proyecto de laboratorio de análisis y de control de calidad",1
+pi_iea,22010712-ELE202-624t,"Coordinación - Tutoría",1
+pi_iea,22010712-ELE202-5335,"Automatismos industriales",1
+pi_iea,22010712-ELE202-5337,"Electrotecnia",1
+pi_iea,22010712-ELE202-5344,"Formación y orientación laboral",1
+pi_iea,22010712-ELE202-5338,"Instalaciones eléctricas interiores.",1
+pi_iea,22010712-ELE202-12360,"Instalaciones solares fotovoltaicas",1
+pi_iea,22010712-ELE202-12359,"Electrónica",1
+pi_iea,22010712-ELE202-4986,"Empresa e iniciativa emprendedora",1
+pi_iea,22010712-ELE202-4987,"Formación en centros de trabajo",1
+pi_iea,22010712-ELE202-4981,"Infraestructuras comunes de telecomunicaciones en viviendas y edificios",1
+pi_iea,22010712-ELE202-4980,"Instalaciones de distribución",1
+pi_iea,22010712-ELE202-4982,"Instalaciones domóticas.",1
+pi_iea,22010712-ELE202-4984,"Máquinas eléctricas",1
+sb_eca,44003028-SEA301-757t,"Coordinación - Tutoría",1
+sb_eca,44003028-SEA301-12339,"Estructura y dinámica del medio ambiente",1
+sb_eca,44003028-SEA301-12340,"Formación y orientación laboral",1
+sb_eca,44003028-SEA301-12338,"Gestión ambiental",1
+sb_eca,44003028-SEA301-12341,"Lengua extranjera profesional: inglés, 1",1
+sb_eca,44003028-SEA301-12342,"Medio natural",1
+sb_eca,44003028-SEA301-12343,"Métodos y productos cartográficos",1
+sb_eca,44003028-SEA301-12344,"Programas de educación ambiental",1
+sb_eca,44003028-SEA301-12345,"Actividades de uso público",1
+sb_eca,44003028-SEA301-12346,"Actividades humanas y problemática ambiental",1
+sb_eca,44003028-SEA301-12347,"Desenvolvimiento en el medio",1
+sb_eca,44003028-SEA301-12348,"Empresa e iniciativa emprendedora",1
+sb_eca,44003028-SEA301-12349,"Formación en centros de trabajo",1
+sb_eca,44003028-SEA301-12350,"Habilidades sociales",1
+sb_eca,44003028-SEA301-12351,"Lengua extranjera profesional: inglés, 2",1
+sb_eca,44003028-SEA301-12352,"Proyecto de educación y control ambiental",1
+sb_eca,44003028-SEA301-12353,"Técnicas de educación ambiental",1
+mi_avge,50010156-HOT301-645t,"Coordinación - Tutoría",1
+mi_avge,50010156-HOT301-5456,"Destinos turísticos",1
+mi_avge,50010156-HOT301-5463,"Dirección de entidades de intermediación turística",1
+mi_avge,50010156-HOT301-5447,"Estructura del mercado turístico",1
+mi_avge,50010156-HOT301-5458,"Formación y orientación laboral",1
+mi_avge,50010156-HOT301-5457,"Recursos turísticos",1
+mi_avge,50010156-HOT301-5234,"Empresa e iniciativa emprendedora",1
+mi_avge,50010156-HOT301-5235,"Formación en centros de trabajo",1
+mi_avge,50010156-HOT301-5236,"Gestión de productos turísticos",1
+mi_avge,50010156-HOT301-5225,"Inglés  Global",1
+mi_avge,50010156-HOT301-5224,"Marketing turístico",1
+mi_avge,50010156-HOT301-5223,"Protocolo y relaciones públicas",1
+mi_avge,50010156-HOT301-5239,"Proyecto de agencias de viajes y gestión de eventos",1
+mi_avge,50010156-HOT301-5228,"Segunda lengua extranjera: Francés Global",1
+mi_avge,50010156-HOT301-5237,"Venta de servicios turísticos",1
+ps_asir,50010144-IFC301-643t,"Coordinación - Tutoría",1
+ps_asir,50010144-IFC301-5283,"Formación y orientación laboral",1
+ps_asir,50010144-IFC301-5274,"Fundamentos de hardware.",1
+ps_asir,50010144-IFC301-5275,"Gestión de bases de datos.",1
+ps_asir,50010144-IFC301-5272,"Implantación de sistemas operativos.",1
+ps_asir,50010144-IFC301-5286,"Lengua extranjera profesional: inglés 1",1
+ps_asir,50010144-IFC301-5276,"Lenguajes de marcas y sistemas de gestión de información.",1
+ps_asir,50010144-IFC301-5273,"Planificación y administración de redes.",1
+ps_asir,50010144-IFC301-5054,"Administración de sistemas gestores de bases de datos.",1
+ps_asir,50010144-IFC301-5051,"Administración de sistemas operativos.",1
+ps_asir,50010144-IFC301-5058,"Empresa e iniciativa emprendedora",1
+ps_asir,50010144-IFC301-5059,"Formación en centros de trabajo",1
+ps_asir,50010144-IFC301-5053,"Implantación de aplicaciones web.",1
+ps_asir,50010144-IFC301-5061,"Lengua extranjera profesional: inglés 2",1
+ps_asir,50010144-IFC301-5056,"Proyecto de administración de sistemas informáticos en red.",1
+ps_asir,50010144-IFC301-5055,"Seguridad y alta disponibilidad.",1
+ps_asir,50010144-IFC301-5052,"Servicios de red e Internet.",1
+ba_dam,44010537-IFC302-681t,"Coordinación - Tutoría",1
+ba_dam,44010537-IFC302-5290,"Bases de datos",1
+ba_dam,44010537-IFC302-5293,"Entornos de desarrollo",1
+ba_dam,44010537-IFC302-5173,"Formación y Orientación Laboral",1
+ba_dam,44010537-IFC302-5176,"Lengua Extranjera profesional: Inglés 1",1
+ba_dam,44010537-IFC302-5288,"Lenguajes de marcas y sistemas de gestión de información",1
+ba_dam,44010537-IFC302-5291,"Programación",1
+ba_dam,44010537-IFC302-5289,"Sistemas informáticos",1
+ba_dam,44010537-IFC302-5066,"Acceso a datos",1
+ba_dam,44010537-IFC302-5068,"Desarrollo de interfaces",1
+ba_dam,44010537-IFC302-5074,"Empresa e iniciativa emprendedora",1
+ba_dam,44010537-IFC302-5075,"Formación en centros de trabajo",1
+ba_dam,44010537-IFC302-5077,"Lengua Extranjera profesional: Inglés 2",1
+ba_dam,44010537-IFC302-5070,"Programación de servicios y procesos",1
+ba_dam,44010537-IFC302-5069,"Programación multimedia y dispositivos móviles",1
+ba_dam,44010537-IFC302-5072,"Proyecto de desarrollo de aplicaciones multiplataforma",1
+ba_dam,44010537-IFC302-5071,"Sistemas de gestión empresarial",1
+rg_sti,50009567-ELE304-97t,"Coordinación  - Tutoría",1
+rg_sti,50009567-ELE304-13932,"Configuración de infraestructuras de sistemas de telecomunicaciones",1
+rg_sti,50009567-ELE304-13929,"Elementos de sistemas de telecomunicaciones",1
+rg_sti,50009567-ELE304-13931,"Formación y orientación laboral",1
+rg_sti,50009567-ELE304-13926,"Gestión de proyectos de instalaciones de telecomunicaciones",1
+rg_sti,50009567-ELE304-13927,"Lengua Extranjera  profesional: Inglés 1",1
+rg_sti,50009567-ELE304-13930,"Sistemas de telefonía fija y móvil",1
+rg_sti,50009567-ELE304-13928,"Sistemas informáticos y redes locales",1
+rg_sti,50009567-ELE304-13933,"Técnicas y procesos en infraestructuras de telecomunicaciones",1
+rg_sti,50009567-ELE304-13934,"Empresa e iniciativa emprendedora",1
+rg_sti,50009567-ELE304-13939,"Formación en centros de trabajo",1
+rg_sti,50009567-ELE304-13938,"Lengua Extranjera profesional: Inglés 2",1
+rg_sti,50009567-ELE304-13941,"Proyecto de Sistemas de Telecomunicaciones e Informáticos",1
+rg_sti,50009567-ELE304-13937,"Redes telemáticas",1
+rg_sti,50009567-ELE304-13936,"Sistemas de producción audiovisual",1
+rg_sti,50009567-ELE304-13935,"Sistemas de radiocomunicaciones",1
+rg_sti,50009567-ELE304-13940,"Sistemas integrados y hogar digital",1
+rg_fp,50009567-SAN202-630t,"Coordinación - Tutoría",1
+rg_fp,50009567-SAN202-5324,"Anatomofisiología  y Patología básicas",1
+rg_fp,50009567-SAN202-5327,"Dispensación de productos farmacéuticos",1
+rg_fp,50009567-SAN202-5325,"Disposición y venta de productos",1
+rg_fp,50009567-SAN202-5332,"Formación y orientación laboral",1
+rg_fp,50009567-SAN202-5326,"Oficina de Farmacia",1
+rg_fp,50009567-SAN202-5329,"Operaciones básicas de laboratorio",1
+rg_fp,50009567-SAN202-5323,"Primeros auxilios",1
+rg_fp,50009567-SAN202-4969,"Dispensación de productos parafarmacéuticos",1
+rg_fp,50009567-SAN202-4974,"Empresa e iniciativa emprendedora",1
+rg_fp,50009567-SAN202-4975,"Formación en centros de trabajo",1
+rg_fp,50009567-SAN202-4971,"Formulación magistral",1
+rg_fp,50009567-SAN202-4972,"Promoción de la salud",1
+rg_es,50009567-SAN203-618t,"Coordinación - Tutoría",1
+rg_es,50009567-SAN203-5319,"Anatomofisiología y patología básicas",1
+rg_es,50009567-SAN203-5316,"Apoyo psicológico en situaciones de emergencia",1
+rg_es,50009567-SAN203-5313,"Atención sanitaria inicial en situaciones de emergencia",1
+rg_es,50009567-SAN203-5312,"Dotación sanitaria",1
+rg_es,50009567-SAN203-5315,"Evacuación y traslado de pacientes",1
+rg_es,50009567-SAN203-5320,"Formación y orientación laboral",1
+rg_es,50009567-SAN203-5310,"Mantenimiento mecánico preventivo del vehículo",1
+rg_es,50009567-SAN203-4955,"Atención sanitaria especial en situaciones de emergencia",1
+rg_es,50009567-SAN203-4962,"Empresa e iniciativa emprendedora",1
+rg_es,50009567-SAN203-4963,"Formación en centros de trabajo",1
+rg_es,50009567-SAN203-4952,"Logística sanitaria en emergencias",1
+rg_es,50009567-SAN203-4958,"Planes de emergencia y dispositivos de riesgos previsibles",1
+rg_es,50009567-SAN203-4959,"Tele emergencia",1
+vt_es,44003235-SAN203-618t,"Coordinación - Tutoría",1
+vt_es,44003235-SAN203-5319,"Anatomofisiología y patología básicas",1
+vt_es,44003235-SAN203-5316,"Apoyo psicológico en situaciones de emergencia",1
+vt_es,44003235-SAN203-5313,"Atención sanitaria inicial en situaciones de emergencia",1
+vt_es,44003235-SAN203-5312,"Dotación sanitaria",1
+vt_es,44003235-SAN203-5315,"Evacuación y traslado de pacientes",1
+vt_es,44003235-SAN203-5320,"Formación y orientación laboral",1
+vt_es,44003235-SAN203-5310,"Mantenimiento mecánico preventivo del vehículo",1
+vt_es,44003235-SAN203-4955,"Atención sanitaria especial en situaciones de emergencia",1
+vt_es,44003235-SAN203-4962,"Empresa e iniciativa emprendedora",1
+vt_es,44003235-SAN203-4963,"Formación en centros de trabajo",1
+vt_es,44003235-SAN203-4952,"Logística sanitaria en emergencias",1
+vt_es,44003235-SAN203-4958,"Planes de emergencia y dispositivos de riesgos previsibles",1
+vt_es,44003235-SAN203-4959,"Tele emergencia",1
+lb_apsd,50008460-SSC201-687t,"Coordinación - Tutoría",1
+lb_apsd,50008460-SSC201-5381,"Apoyo domiciliario",1
+lb_apsd,50008460-SSC201-5382,"Atención sanitaria",1
+lb_apsd,50008460-SSC201-5379,"Atención y apoyo psicosocial",1
+lb_apsd,50008460-SSC201-5378,"Características y necesidades de las personas en situación de dependencia",1
+lb_apsd,50008460-SSC201-5384,"Formación y orientación laboral",1
+lb_apsd,50008460-SSC201-5375,"Primeros auxilios",1
+lb_apsd,50008460-SSC201-5128,"Apoyo a la comunicación",1
+lb_apsd,50008460-SSC201-5131,"Atención higiénica",1
+lb_apsd,50008460-SSC201-5125,"Destrezas sociales",1
+lb_apsd,50008460-SSC201-5133,"Empresa e iniciativa emprendedora",1
+lb_apsd,50008460-SSC201-5134,"Formación en centros de trabajo",1
+lb_apsd,50008460-SSC201-5124,"Organización de la atención a las personas en situación de dependencia",1
+lb_apsd,50008460-SSC201-5135,"Teleasistencia",1
+mo_apsd,22002491-SSC201-687t,"Coordinación - Tutoría",1
+mo_apsd,22002491-SSC201-5381,"Apoyo domiciliario",1
+mo_apsd,22002491-SSC201-5382,"Atención sanitaria",1
+mo_apsd,22002491-SSC201-5379,"Atención y apoyo psicosocial",1
+mo_apsd,22002491-SSC201-5378,"Características y necesidades de las personas en situación de dependencia",1
+mo_apsd,22002491-SSC201-5384,"Formación y orientación laboral",1
+mo_apsd,22002491-SSC201-5375,"Primeros auxilios",1
+mo_apsd,22002491-SSC201-5128,"Apoyo a la comunicación",1
+mo_apsd,22002491-SSC201-5131,"Atención higiénica",1
+mo_apsd,22002491-SSC201-5125,"Destrezas sociales",1
+mo_apsd,22002491-SSC201-5133,"Empresa e iniciativa emprendedora",1
+mo_apsd,22002491-SSC201-5134,"Formación en centros de trabajo",1
+mo_apsd,22002491-SSC201-5124,"Organización de la atención a las personas en situación de dependencia",1
+mo_apsd,22002491-SSC201-5135,"Teleasistencia",1
+mv_ei,22004611-SSC302-140t,"Coordinación - Tutoría",1
+mv_ei,22004611-SSC302-5433,"Autonomía personal y salud infantil.",1
+mv_ei,22004611-SSC302-5436,"Desarrollo cognitivo y motor.",1
+mv_ei,22004611-SSC302-5432,"Didáctica de la Educación Infantil.",1
+mv_ei,22004611-SSC302-5434,"El juego infantil y su metodología.",1
+mv_ei,22004611-SSC302-5442,"Formación y orientación laboral.",1
+mv_ei,22004611-SSC302-5445,"Lengua extranjera profesional: inglés 1",1
+mv_ei,22004611-SSC302-5441,"Primeros auxilios.",1
+mv_ei,22004611-SSC302-5212,"Desarrollo socioafectivo.",1
+mv_ei,22004611-SSC302-5218,"Empresa e iniciativa emprendedora.",1
+mv_ei,22004611-SSC302-5210,"Expresión y comunicación.",1
+mv_ei,22004611-SSC302-5219,"Formación en centros de trabajo",1
+mv_ei,22004611-SSC302-5213,"Habilidades sociales.",1
+mv_ei,22004611-SSC302-5214,"Intervención con familias y atención a menores en riesgo social.",1
+mv_ei,22004611-SSC302-5221,"Lengua extranjera profesional: inglés 2",1
+mv_ei,22004611-SSC302-5215,"Proyecto de atención a la infancia.",1
+av_ei,50009348-SSC302-140t,"Coordinación - Tutoría",1
+av_ei,50009348-SSC302-5433,"Autonomía personal y salud infantil.",1
+av_ei,50009348-SSC302-5436,"Desarrollo cognitivo y motor.",1
+av_ei,50009348-SSC302-5432,"Didáctica de la Educación Infantil.",1
+av_ei,50009348-SSC302-5434,"El juego infantil y su metodología.",1
+av_ei,50009348-SSC302-5442,"Formación y orientación laboral.",1
+av_ei,50009348-SSC302-5445,"Lengua extranjera profesional: inglés 1",1
+av_ei,50009348-SSC302-5441,"Primeros auxilios.",1
+av_ei,50009348-SSC302-5212,"Desarrollo socioafectivo.",1
+av_ei,50009348-SSC302-5218,"Empresa e iniciativa emprendedora.",1
+av_ei,50009348-SSC302-5210,"Expresión y comunicación.",1
+av_ei,50009348-SSC302-5219,"Formación en centros de trabajo",1
+av_ei,50009348-SSC302-5213,"Habilidades sociales.",1
+av_ei,50009348-SSC302-5214,"Intervención con familias y atención a menores en riesgo social.",1
+av_ei,50009348-SSC302-5221,"Lengua extranjera profesional: inglés 2",1
+av_ei,50009348-SSC302-5215,"Proyecto de atención a la infancia.",1
+mm_is,50008642-SSC303-768t,"Coordinación - Tutoría",1
+mm_is,50008642-SSC303-7878,"Apoyo a la intervención educativa",1
+mm_is,50008642-SSC303-7874,"Contexto de la intervención social",1
+mm_is,50008642-SSC303-8339,"Formación y orientación laboral",1
+mm_is,50008642-SSC303-7875,"Inserción sociolaboral",1
+mm_is,50008642-SSC303-7884,"Lengua extranjera profesional: Inglés 1",1
+mm_is,50008642-SSC303-7877,"Mediación comunitaria",1
+mm_is,50008642-SSC303-7882,"Primeros auxilios",1
+mm_is,50008642-SSC303-7879,"Promoción de la autonomía personal",1
+mm_is,50008642-SSC303-7892,"Atención a las unidades de convivencia",1
+mm_is,50008642-SSC303-7902,"Empresa e iniciativa emprendedora",1
+mm_is,50008642-SSC303-7889,"Formación en centros de trabajo",1
+mm_is,50008642-SSC303-7793,"Formación y orientación laboral ERRÓNEO",0
+mm_is,50008642-SSC303-7899,"Habilidades sociales",1
+mm_is,50008642-SSC303-7885,"Lengua extranjera profesional: Inglés 2",1
+mm_is,50008642-SSC303-7897,"Metodología de la intervención social",1
+mm_is,50008642-SSC303-7901,"Proyecto de integración social",1
+mm_is,50008642-SSC303-7896,"Sistemas aumentativos y alternativos de comunicación",1
+miscelanea,moodle-para-fp-distancia,"Moodle para FP a distancia. Digitalización A.O",1
+miscelanea,pruebas,"Pruebas",1
+miscelanea,actualizacion-moodle-fp-distancia,"Actualización - Moodle para FP a distancia",1

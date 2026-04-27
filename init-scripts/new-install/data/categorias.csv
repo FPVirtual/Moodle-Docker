@@ -1,0 +1,55 @@
+var_name,parent,visible,description,name
+miscelanea,0,1,,Miscelanea
+general,0,1,general,General
+app,0,1,app,NO BORRAR - APP MOVIL
+sg,0,1,22002521,IES SIERRA DE GUARA
+sg_ga,sg,1,ADG201,Gestión Administrativa
+se,0,1,44003211,IES SANTA EMERENCIANA
+se_ga,se,1,ADG201,Gestión Administrativa
+tm,0,1,50010511,IES TIEMPOS MODERNOS
+tm_ga,tm,1,ADG201,Gestión Administrativa
+le,0,1,50010314,CPIFP LOS ENLACES
+le_smr,le,1,IFC201,Sistemas Microinformáticos y Redes
+le_ac,le,1,COM201,Actividades Comerciales
+le_ci,le,1,COM301,Comercio Internacional
+le_gvec,le,1,COM302,Gestión de Ventas y Espacios Comerciales
+le_tl,le,1,COM303,Transporte y Logística
+le_daw,le,1,IFC303,Desarrollo de Aplicaciones WEB
+le_pae,le,1,IMS302,Producción de Audiovisuales y Espectáculos
+ca,0,1,50018829,CPIFP CORONA DE ARAGÓN
+ca_ad,ca,1,ADG302,Asistencia a la Dirección
+ca_af,ca,1,ADG301,Administración y Finanzas
+ca_lacc,ca,1,QUI301,Laboratorio de Análisis y de Control de Calidad
+pi,0,1,22010712,CPIFP PIRÁMIDE
+pi_iea,pi,1,ELE202,Instalaciones Eléctricas y Automáticas
+sb,0,1,44003028,CPIFP SAN BLAS
+sb_eca,sb,1,SEA301,Educación y Control Ambiental
+mi,0,1,50010156,IES MIRALBUENO
+mi_avge,mi,1,HOT301,Agencias de Viajes y Gestión de Eventos
+ps,0,1,50010144,IES PABLO SERRANO
+ps_asir,ps,1,IFC301,Administración de Sistemas Informáticos en Red
+ba,0,1,44010537,CPIFP BAJO ARAGÓN
+ba_dam,ba,1,IFC301,Desarrollo de Aplicaciones Multiplataforma
+rg,0,1,50009567,IES RÍO GÁLLEGO
+rg_sti,rg,1,ELE304,Sistemas de Telecomunicaciones e Informáticos
+rg_fp,rg,1,SAN202,Farmacia y Parafarmacia
+rg_es,rg,1,SAN203,Emergencias Sanitarias
+vt,0,1,44003235,IES VEGA DEL TURIA
+vt_es,vt,1,SAN203,Emergencias Sanitarias
+lb,0,1,50008460,IES LUIS BUÑUEL
+lb_apsd,lb,1,SSC201,Atención a Personas en situación de Dependencia
+mo,0,1,22002491,CPIFP MONTEARAGON
+mo_apsd,mo,1,SSC201,Atención a Personas en situación de Dependencia
+mv,0,1,22004611,IES MARTÍNEZ VARGAS
+mv_ei,mv,1,SSC302,Educación Infantil (Formación Profesional)
+av,0,1,50009348,IES AVEMPACE
+av_ei,av,1,SSC302,Educación Infantil (Formación Profesional)
+mm,0,1,50008642,IES MARÍA MOLINER
+mm_is,mm,1,SSC303,Integración Social
+cd,0,1,50020125,Campus Digital FP
+cd_smr,cd,1,IFC201,Sistemas Microinformáticos y Redes
+cd_asir,cd,1,IFC301,Administración de Sistemas Informáticos en Red
+cd_dam,cd,1,IFC302,Desarrollo de Aplicaciones Multiplataforma
+cd_daw,cd,1,IFC303,Desarrollo de Aplicaciones WEB
+cd_iabd,cd,1,CESIFC02,Inteligencia Artificial y Big Data
+cd_ceti,cd,1,CESIFC01,Ciberseguridad en Entornos de las Tecnologías de la Información

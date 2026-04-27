@@ -1,0 +1,18 @@
+username,password_env,email,firstname,lastname,cod_centro,category_var
+prof_je_sg,MANAGER_PASSWORD,jefaturas@educa.aragon.es,Jefatura de estudios,IES Sierra de Guara,22002521,sg
+prof_je_se,MANAGER_PASSWORD,jefaturas@educa.aragon.es,Jefatura de estudios,IES SANTA EMERENCIANA,44003211,se
+prof_je_tm,MANAGER_PASSWORD,jefaturas@educa.aragon.es,Jefatura de estudios,IES TIEMPOS MODERNOS,50010511,tm
+prof_je_le,MANAGER_PASSWORD,jefaturas@educa.aragon.es,Jefatura de estudios,CPIFP LOS ENLACES,50010314,le
+prof_je_ca,MANAGER_PASSWORD,jefaturas@educa.aragon.es,Jefatura de estudios,CPIFP CORONA DE ARAGÓN,50018829,ca
+prof_je_pi,MANAGER_PASSWORD,jefaturas@educa.aragon.es,Jefatura de estudios,CPIFP PIRÁMIDE,22010712,pi
+prof_je_sb,MANAGER_PASSWORD,jefaturas@educa.aragon.es,Jefatura de estudios,CPIFP SAN BLAS,44003028,sb
+prof_je_mi,MANAGER_PASSWORD,jefaturas@educa.aragon.es,Jefatura de estudios,IES MIRALBUENO,50010156,mi
+prof_je_ps,MANAGER_PASSWORD,jefaturas@educa.aragon.es,Jefatura de estudios,IES PABLO SERRANO,50010144,ps
+prof_je_ba,MANAGER_PASSWORD,jefaturas@educa.aragon.es,Jefatura de estudios,CPIFP BAJO ARAGÓN,44010537,ba
+prof_je_rg,MANAGER_PASSWORD,jefaturas@educa.aragon.es,Jefatura de estudios,IES RÍO GÁLLEGO,50009567,rg
+prof_je_vt,MANAGER_PASSWORD,jefaturas@educa.aragon.es,Jefatura de estudios,IES VEGA DEL TURIA,44003235,vt
+prof_je_lb,MANAGER_PASSWORD,jefaturas@educa.aragon.es,Jefatura de estudios,IES LUIS BUÑUEL,50008460,lb
+prof_je_mo,MANAGER_PASSWORD,jefaturas@educa.aragon.es,Jefatura de estudios,CPIFP MONTEARAGON,22002491,mo
+prof_je_mv,MANAGER_PASSWORD,jefaturas@educa.aragon.es,Jefatura de estudios,IES MARTÍNEZ VARGAS,22004611,mv
+prof_je_av,MANAGER_PASSWORD,jefaturas@educa.aragon.es,Jefatura de estudios,IES AVEMPACE,50009348,av
+prof_je_mm,MANAGER_PASSWORD,jefaturas@educa.aragon.es,Jefatura de estudios,IES MARÍA MOLINER,50008642,mm
