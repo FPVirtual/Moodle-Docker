@@ -2,4 +2,5 @@
 /moodle-data/
 /moodle-code/
 /init-scripts/mbzs/
+/init-scripts/moodle-code/
 /docker-compose.override.yml
