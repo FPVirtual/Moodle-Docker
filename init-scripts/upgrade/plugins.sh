@@ -1,4 +1,10 @@
 #!/bin/bash
+# Reinstalacion de plugins para FPD (upgrade)
+# Lee el catalogo desde plugins.json y las variables PLUGIN_* del .env
+
+# Cargar helpers
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "${SCRIPT_DIR}/../lib/plugins-lib.sh"
 
 # GET PLUGIN LIST
 echo >&2 "Downloading plugin list..."
@@ -11,32 +17,13 @@ echo "Moodle's version: ${VERSION}"
 VERSION_MINOR=$(echo ${VERSION} | cut -d. -f1,2)
 echo "Moodle's minor version: ${VERSION_MINOR}"
 
-PLUGINS=( 
-    "theme_moove" 
-    "format_tiles"
-    "block_xp"
-    "availability_xp"
-    "local_mail"
-    "block_configurable_reports"
-    "report_coursestats"
-    "quizaccess_onesession"
-    "mod_choicegroup"
-    "mod_board"
-    "mod_pdfannotator"
-    "block_grade_me"
-    "block_completion_progress"
-    "atto_fontsize"
-    "atto_fontfamily"
-    "atto_fullscreen"
-    "qtype_gapfill"
-    "mod_attendance"
-    "mod_checklist"
-    "mod_checklist"
-)
+# Mostrar resumen antes de empezar
+plugins_show_summary
 
-for PLUGIN in "${PLUGINS[@]}"
-do
-    moosh plugin-install -d ${PLUGIN} 
-done
+while IFS= read -r PLUGIN; do
+    [ -z "$PLUGIN" ] && continue
+    echo "===> Upgrading/Reinstalling plugin: ${PLUGIN}"
+    moosh plugin-install -d ${PLUGIN} || echo "${PLUGIN} skipped or already present"
+done < <(plugins_list_enabled)
 
 echo >&2 "Plugins installed!"

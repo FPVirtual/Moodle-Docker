@@ -1,5 +1,12 @@
 #!/bin/bash
-# Instalación de plugins para FPD
+# Instalacion de plugins para FPD
+# Lee el catalogo desde plugins.json y las variables PLUGIN_* del .env
+
+set +x
+
+# Cargar helpers
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "${SCRIPT_DIR}/../lib/plugins-lib.sh"
 
 ####################
 # functions        #
@@ -83,8 +90,6 @@ actions_asociated_to_plugin(){
 # main             #
 ####################
 
-set +x
-
 echo >&2 "Downloading plugin list..."
 moosh plugin-list >/dev/null
 echo >&2 "Plugin list downloaded!"
@@ -94,49 +99,35 @@ echo "Moodle's version: ${VERSION}"
 VERSION_MINOR=$(echo ${VERSION} | cut -d. -f1,2)
 echo "Moodle's minor version: ${VERSION_MINOR}"
 
-PLUGINS=( 
-    "theme_moove"
-    "format_tiles"
-    "block_xp"
-    "availability_xp"
-    "block_configurable_reports"
-    "report_coursestats"
-    "quizaccess_onesession"
-    "mod_choicegroup"
-    "mod_board"
-    "local_mail"
-    "mod_pdfannotator"
-    "block_grade_me"
-    "block_completion_progress"
-    "atto_fontsize"
-    "atto_fontfamily"
-    "atto_fullscreen"
-    "qtype_gapfill"
-    "mod_attendance"
-    "mod_checklist"
-    "mod_checklist" # repito porque si no el último plugin no termina de instalarse
-)
+# Mostrar resumen antes de empezar
+plugins_show_summary
 
-for PLUGIN in "${PLUGINS[@]}"
-do
-    # Si el plugin ya está presente en el código (clonado en la imagen), moosh plugin-install lo saltará.
-    # De todos modos ejecutamos actions_asociated_to_plugin para aplicar la configuración post-instalación.
-    if moosh plugin-list | grep ${PLUGIN} | grep ${VERSION_MINOR} >/dev/null; then
+# Iterar sobre los plugins habilitados
+while IFS= read -r PLUGIN; do
+    [ -z "$PLUGIN" ] && continue
+
+    echo ""
+    echo "===> Processing plugin: ${PLUGIN}"
+
+    # Instalar via moosh si esta disponible para esta version
+    if moosh plugin-list | grep "^${PLUGIN} " | grep "${VERSION_MINOR}" >/dev/null; then
         echo "trying to install ${PLUGIN} ..."
         moosh plugin-install -d ${PLUGIN} || echo "${PLUGIN} already present or install skipped"
     else
         echo "${PLUGIN} is not available in remote list for ${VERSION_MINOR}, checking local..."
     fi
+
+    # Ejecutar acciones asociadas (configuracion post-instalacion)
     actions_asociated_to_plugin ${PLUGIN}
-done
+done < <(plugins_list_enabled)
 
 echo >&2 "Plugins installed!"
 
-# CONFIGURE PLUGINS
-echo "Configuring plugins..."
-
-echo "Configuring editor_atto..."
-moosh config-set toolbar "collapse = collapse
+# CONFIGURE PLUGINS GLOBALES
+# Solo configuramos Atto si al menos uno de los plugins de Atto esta habilitado
+if plugin_is_enabled "atto_fontsize" || plugin_is_enabled "atto_fontfamily" || plugin_is_enabled "atto_fullscreen" || plugin_is_enabled "atto_c4l"; then
+    echo "Configuring editor_atto..."
+    moosh config-set toolbar "collapse = collapse
 style1 = title, fontsize, fontfamily, fontcolor, backcolor, bold, italic
 list = unorderedlist, orderedlist
 links = link
@@ -149,14 +140,17 @@ insert = equation, charmap, table, clear
 undo = undo
 accessibility = accessibilitychecker, accessibilityhelper
 other = html, fullscreen" editor_atto
+fi
 
-echo "Configuring atto_fontfamily..."
-moosh config-set fontselectlist "Arial=Arial, Helvetica, sans-serif;
+if plugin_is_enabled "atto_fontfamily"; then
+    echo "Configuring atto_fontfamily..."
+    moosh config-set fontselectlist "Arial=Arial, Helvetica, sans-serif;
 Times=Times New Roman, Times, serif;
 Courier=Courier New, Courier, mono;
 Georgia=Georgia, Times New Roman, Times, serif;
 Verdana=Verdana, Geneva, sans-serif;
 Trebuchet=Trebuchet MS, Helvetica, sans-serif;
 Escolar=Boo;" atto_fontfamily
+fi
 
 echo "Plugins configurated!"

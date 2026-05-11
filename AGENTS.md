@@ -122,10 +122,15 @@ Configura el sitio Moodle mediante **Moosh**:
 - Configuraciones de calificación, políticas de privacidad, analytics desactivado.
 
 ### `new-install/plugins.sh`
-Descarga e instala plugins oficiales compatibles con la versión menor de Moodle (`VERSION_MINOR`):
-`theme_moove`, `format_tiles`, `block_xp`, `availability_xp`, `local_mail`, `mod_board`, `mod_pdfannotator`, `block_grade_me`, `block_completion_progress`, `atto_fontsize`, `atto_fontfamily`, `atto_fullscreen`, `qtype_gapfill`, `mod_attendance`, `mod_checklist`, `block_configurable_reports`, `report_coursestats`, `quizaccess_onesession`, `mod_choicegroup`.
+Instala y configura plugins de terceros leyendo el catálogo desde **`/init-scripts/plugins.json`** y filtrando por las variables de entorno **`PLUGIN_*`** definidas en `.env`.
 
-Incluye una función `actions_asociated_to_plugin` que configura cada plugin tras su instalación.
+Plugins disponibles (habilitados por defecto según `default_enabled` del JSON):
+`theme_moove`, `format_tiles`, `block_xp`, `availability_xp`, `local_mail`, `mod_board`, `mod_pdfannotator`, `block_grade_me`, `block_completion_progress`, `atto_fontsize`, `atto_fontfamily`, `atto_fullscreen`, `qtype_gapfill`, `mod_attendance`, `mod_checklist`, `quizaccess_onesession`, `mod_choicegroup`.
+
+Plugins opcionales / deshabilitados por defecto:
+`block_configurable_reports`, `report_coursestats`, `mod_jitsi`, `block_sharing_cart`, `local_reminders`, `atto_c4l`, `mod_googlemeet`.
+
+Incluye una función `actions_asociated_to_plugin` que configura cada plugin tras su instalación. Los helpers para leer el JSON están en `init-scripts/lib/plugins-lib.sh`.
 
 ### `new-install/theme.sh`
 - Activa el tema **Moove**.
@@ -149,7 +154,7 @@ Incluye una función `actions_asociated_to_plugin` que configura cada plugin tra
 ### `upgrade/`
 Scripts simplificados para actualizaciones:
 - `moodle.sh`: usa `expect` para automatizar la respuesta interactiva de `upgrade.php` y reaplica ajustes post-upgrade.
-- `plugins.sh`: reinstala plugins (sin filtrado por versión).
+- `plugins.sh`: reinstala plugins habilitados según `plugins.json` + variables `PLUGIN_*` (sin filtrado por versión).
 - `theme.sh`: reaplica la configuración del tema Moove.
 
 ---
@@ -171,6 +176,22 @@ Toda la configuración sensible y de entorno se define en **`.env`** (a partir d
 | `INSTALL_TYPE` | `new-install` o `upgrade` |
 | `VERSION` | Versión de Moodle (ej. `4.1.19`), usada para filtrar plugins |
 | `MOODLE_DB_PORT` | Puerto de la base de datos (ej. `3306` para red Docker, o `3316` si se expone al host) |
+| `PLUGIN_<NAME>` | Habilita (`true`) o deshabilita (`false`) un plugin del catálogo. Ver `.env.example` |
+
+---
+
+## Catálogo de plugins (`plugins.json`)
+
+El archivo `plugins.json` (copiado a `/init-scripts/plugins.json` en la imagen) define:
+- Nombre del componente (`name`, `component`).
+- Categoría y descripción.
+- Ruta de instalación en Moodle (`moodle_path`).
+- URL del repositorio git (`git_url`, `git_branch`).
+- Valor por defecto de habilitación (`default_enabled`).
+- Si requiere acciones post-instalación (`has_postinstall_actions`).
+- Advertencias de deprecación u obsolescencia (`warning`).
+
+Las variables de entorno `PLUGIN_<NOMBRE_EN_MAYUSCULAS>` en `.env` sobreescriben `default_enabled`. Si una variable no está definida, se usa el valor del JSON. Comentar una línea en `.env` equivale a dejar que el JSON decida.
 | `MOODLE_CODE_PATH` | Ruta al código Moodle en el host (para override) |
 | `FPD_PASSWORD`, `FPD_EMAIL`, `MANAGER_PASSWORD` | Credenciales específicas de usuarios FPD |
 | `APP_PASSWORD`, `APP_TEACHER_PASSWORD` | Credenciales para la app móvil de demo |
@@ -306,6 +327,7 @@ No hay suite de tests unitarios/integración automatizados. Las verificaciones m
 
 - **IDs inmutables**: en `import_FPD_categories_and_courses.sh`, los IDs de categorías y cursos son críticos para la app móvil y automatizaciones. No reordenar el array `COURSES`.
 - **Moosh plugin-list**: los scripts de `new-install` filtran plugins por `VERSION_MINOR`. Si Moodle se actualiza a una nueva versión menor (ej. 4.1 → 4.2), asegurarse de que todos los plugins tengan versión compatible antes de desplegar.
+- **Plugins JSON**: al añadir un plugin nuevo, incluirlo en `plugins.json` y en `.env.example`. Reconstruir la imagen para que el JSON se copie a `/init-scripts/`.
 - **Expect en upgrade**: `upgrade/moodle.sh` usa `expect` para responder automáticamente al prompt de `upgrade.php`. Si el CLI de Moodle cambia su texto interactivo, el script de expect podría fallar.
 - **Volumen compartido moodle-data**: en este despliegue el `moodle-data` se comparte con el contenedor anterior. Asegurarse siempre de que el contenedor anterior esté apagado antes de levantar el nuevo. En futuras iteraciones se migrará a un filesystem de red (GlusterFS/Galera).
 - **Override file**: `docker-compose.override.yml` se carga automáticamente. Para volver al código empaquetado en la imagen, basta con eliminar o renombrar este archivo.

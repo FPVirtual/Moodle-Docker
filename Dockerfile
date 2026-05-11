@@ -111,11 +111,13 @@ COPY custom/userpix /var/www/html/userpix
 RUN chown -R www-data:www-data /var/www/html/decalogo /var/www/html/faqs \
     /var/www/html/private-reports /var/www/html/soporte /var/www/html/userpix
 
-# Copiar scripts de inicialización
+# Copiar catalogo de plugins y scripts de inicialización
+COPY plugins.json /init-scripts/plugins.json
 COPY init-scripts /init-scripts
 RUN chmod +x /init-scripts/init.sh \
     && chmod +x /init-scripts/new-install/*.sh \
-    && chmod +x /init-scripts/upgrade/*.sh
+    && chmod +x /init-scripts/upgrade/*.sh \
+    && chmod +x /init-scripts/lib/*.sh
 
 # Copiar configuraciones de PHP-FPM y PHP
 COPY fpm-conf /usr/local/etc/php-fpm.d
