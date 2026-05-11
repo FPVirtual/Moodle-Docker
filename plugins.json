@@ -22,7 +22,7 @@
       "category": "course_format",
       "moodle_path": "course/format/tiles",
       "install_method": "moosh",
-      "git_url": "https://github.com/deferredreward/moodle-format_tiles.git",
+      "git_url": "https://github.com/learnweb/moodle-format_tiles.git",
       "git_branch": "main",
       "default_enabled": true,
       "has_postinstall_actions": true
@@ -35,7 +35,7 @@
       "moodle_path": "blocks/xp",
       "install_method": "moosh",
       "git_url": "https://github.com/FMCorz/moodle-block_xp.git",
-      "git_branch": "main",
+      "git_branch": "master",
       "default_enabled": true,
       "has_postinstall_actions": true
     },
@@ -47,7 +47,7 @@
       "moodle_path": "availability/condition/xp",
       "install_method": "moosh",
       "git_url": "https://github.com/FMCorz/moodle-availability_xp.git",
-      "git_branch": "main",
+      "git_branch": "master",
       "default_enabled": true,
       "has_postinstall_actions": false
     },
@@ -58,8 +58,8 @@
       "category": "communication",
       "moodle_path": "local/mail",
       "install_method": "moosh",
-      "git_url": "https://github.com/Syxton/moodle-local_mail.git",
-      "git_branch": "main",
+      "git_url": "https://github.com/IOC/moodle-local_mail.git",
+      "git_branch": "master",
       "default_enabled": true,
       "has_postinstall_actions": true
     },
@@ -71,7 +71,7 @@
       "moodle_path": "blocks/configurable_reports",
       "install_method": "moosh",
       "git_url": "https://github.com/jleyva/moodle-block_configurablereports.git",
-      "git_branch": "master",
+      "git_branch": "MOODLE_4x_STABLE",
       "default_enabled": false,
       "has_postinstall_actions": true,
       "warning": "DEPRECADO. Open LMS retira soporte en julio 2026. Evaluar alternativa antes de habilitar."
@@ -83,8 +83,8 @@
       "category": "reporting",
       "moodle_path": "report/coursestats",
       "install_method": "moosh",
-      "git_url": "https://github.com/jleyva/moodle-report_coursestats.git",
-      "git_branch": "master",
+      "git_url": "https://github.com/dired-ufla/moodle-report_coursestats_v2.git",
+      "git_branch": "main",
       "default_enabled": false,
       "has_postinstall_actions": false,
       "warning": "OBSOLETO. Sin actualizaciones desde 2020."
@@ -96,8 +96,8 @@
       "category": "quiz",
       "moodle_path": "mod/quiz/accessrule/onesession",
       "install_method": "moosh",
-      "git_url": "https://github.com/safatman/moodle-quizaccess_onesession.git",
-      "git_branch": "main",
+      "git_url": "https://github.com/vadimonus/moodle-quizaccess_onesession.git",
+      "git_branch": "master",
       "default_enabled": true,
       "has_postinstall_actions": false
     },
@@ -109,7 +109,7 @@
       "moodle_path": "mod/choicegroup",
       "install_method": "moosh",
       "git_url": "https://github.com/ndunand/moodle-mod_choicegroup.git",
-      "git_branch": "main",
+      "git_branch": "master",
       "default_enabled": true,
       "has_postinstall_actions": false
     },
@@ -120,7 +120,7 @@
       "category": "activity",
       "moodle_path": "mod/board",
       "install_method": "moosh",
-      "git_url": "https://github.com/basbruss/moodle-mod_board.git",
+      "git_url": "https://github.com/brickfield/moodle-mod_board.git",
       "git_branch": "main",
       "default_enabled": true,
       "has_postinstall_actions": true
@@ -132,7 +132,7 @@
       "category": "activity",
       "moodle_path": "mod/pdfannotator",
       "install_method": "moosh",
-      "git_url": "https://github.com/rwirth/moodle-mod_pdfannotator.git",
+      "git_url": "https://github.com/rwthmoodle/moodle-mod_pdfannotator.git",
       "git_branch": "main",
       "default_enabled": true,
       "has_postinstall_actions": true
@@ -156,8 +156,8 @@
       "category": "block",
       "moodle_path": "blocks/completion_progress",
       "install_method": "moosh",
-      "git_url": "https://github.com/deraadt/Moodle-block_completion_progress.git",
-      "git_branch": "MOODLE_401_STABLE",
+      "git_url": "https://github.com/deraadt/moodle-block_completion_progress.git",
+      "git_branch": "master",
       "default_enabled": true,
       "has_postinstall_actions": false
     },
@@ -181,8 +181,8 @@
       "category": "editor",
       "moodle_path": "lib/editor/atto/plugins/fontfamily",
       "install_method": "moosh",
-      "git_url": "https://github.com/andrewnicols/moodle-atto_fontfamily.git",
-      "git_branch": "main",
+      "git_url": "https://github.com/projectestac/moodle-atto_fontfamily.git",
+      "git_branch": "master",
       "default_enabled": true,
       "has_postinstall_actions": true,
       "warning": "Editor Atto esta siendo reemplazado por TinyMCE en Moodle moderno."
@@ -195,7 +195,7 @@
       "moodle_path": "lib/editor/atto/plugins/fullscreen",
       "install_method": "moosh",
       "git_url": "https://github.com/dthies/moodle-atto_fullscreen.git",
-      "git_branch": "main",
+      "git_branch": "master",
       "default_enabled": true,
       "has_postinstall_actions": false
     },
@@ -206,7 +206,7 @@
       "category": "question_type",
       "moodle_path": "question/type/gapfill",
       "install_method": "moosh",
-      "git_url": "https://github.com/gbateson/moodle-qtype_gapfill.git",
+      "git_url": "https://github.com/marcusgreen/moodle-qtype_gapfill.git",
       "git_branch": "main",
       "default_enabled": true,
       "has_postinstall_actions": false
@@ -230,8 +230,8 @@
       "category": "activity",
       "moodle_path": "mod/checklist",
       "install_method": "moosh",
-      "git_url": "https://github.com/davosmith/moodle-mod_checklist.git",
-      "git_branch": "main",
+      "git_url": "https://github.com/davosmith/moodle-checklist.git",
+      "git_branch": "MOODLE_401_STABLE",
       "default_enabled": true,
       "has_postinstall_actions": false
     },
@@ -243,7 +243,7 @@
       "moodle_path": "mod/jitsi",
       "install_method": "moosh",
       "git_url": "https://github.com/SergioComeron/moodle-mod_jitsi.git",
-      "git_branch": "main",
+      "git_branch": "master",
       "default_enabled": false,
       "has_postinstall_actions": true,
       "warning": "Tiene configuracion en actions_asociated_to_plugin pero NO esta en los scripts PLUGINS por defecto. Habilitar si se usa."
@@ -256,7 +256,7 @@
       "moodle_path": "blocks/sharing_cart",
       "install_method": "moosh",
       "git_url": "https://github.com/donhinkelman/moodle-block_sharing_cart.git",
-      "git_branch": "main",
+      "git_branch": "MOODLE_41_STABLE",
       "default_enabled": false,
       "has_postinstall_actions": false,
       "warning": "Muy util pero NO esta en los scripts PLUGINS por defecto. Habilitar si se usa."
@@ -268,8 +268,8 @@
       "category": "local",
       "moodle_path": "local/reminders",
       "install_method": "moosh",
-      "git_url": "https://github.com/Isuru-Madusanka/moodle-local_reminders.git",
-      "git_branch": "main",
+      "git_url": "https://github.com/isuru89/moodle-local_reminders.git",
+      "git_branch": "master",
       "default_enabled": false,
       "has_postinstall_actions": false,
       "warning": "NO esta en los scripts PLUGINS por defecto. Habilitar si se usa."
@@ -281,24 +281,11 @@
       "category": "editor",
       "moodle_path": "lib/editor/atto/plugins/c4l",
       "install_method": "moosh",
-      "git_url": "https://github.com/dthies/moodle-atto_c4l.git",
+      "git_url": "https://github.com/rogersegu/moodle-atto_c4l.git",
       "git_branch": "main",
       "default_enabled": false,
       "has_postinstall_actions": false,
       "warning": "NO esta en los scripts PLUGINS por defecto. Existe version para TinyMCE (tiny_c4l)."
-    },
-    {
-      "name": "mod_googlemeet",
-      "component": "mod_googlemeet",
-      "description": "Salas de Google Meet integradas en cursos.",
-      "category": "activity",
-      "moodle_path": "mod/googlemeet",
-      "install_method": "moosh",
-      "git_url": "https://github.com/gerardkcohen/moodle-mod_googlemeet.git",
-      "git_branch": "main",
-      "default_enabled": false,
-      "has_postinstall_actions": false,
-      "warning": "OBSOLETO. Ultima release hace 2 anos. Alto riesgo de incompatibilidad."
     }
   ]
 }
