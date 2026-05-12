@@ -9,6 +9,53 @@ if [ ! -f /var/www/html/config.php ] && [ -f /usr/src/moodle/config-dist.php ]; 
     echo "Código restaurado."
 fi
 
+# Asegurar que moodledata sea escribible por www-data
+chown -R www-data:www-data /var/www/moodledata || true
+
+# Generar config.php si no existe (a partir de variables de entorno)
+if [ ! -f /var/www/html/config.php ]; then
+    echo "Generando config.php desde variables de entorno..."
+    cat > /var/www/html/config.php << 'PHPConfigEOF'
+<?php  // Moodle configuration file
+
+unset($CFG);
+global $CFG;
+$CFG = new stdClass();
+
+$CFG->dbtype    = 'mariadb';
+$CFG->dblibrary = 'native';
+$CFG->dbhost    = getenv('MOODLE_DB_HOST') ?: 'db';
+$CFG->dbname    = getenv('MOODLE_DB_NAME') ?: 'moodle';
+$CFG->dbuser    = getenv('MOODLE_DB_USER') ?: 'moodle';
+$CFG->dbpass    = getenv('MOODLE_DB_PASSWORD') ?: 'moodle';
+$CFG->prefix    = 'mdl_';
+$CFG->dboptions = [
+    'dbpersist' => false,
+    'dbport'    => getenv('MOODLE_DB_PORT') ?: 3306,
+    'dbsocket'  => '',
+    'dbssl'     => '',
+    'dbsslca'   => '',
+    'dbsslcert' => '',
+    'dbsslkey'  => '',
+    'dbsslverifyservercert' => false,
+    'dbping'    => 0,
+];
+
+$CFG->wwwroot   = getenv('MOODLE_URL') ?: 'http://localhost';
+$CFG->dataroot  = '/var/www/moodledata';
+$CFG->admin     = getenv('MOODLE_ADMIN_USER') ?: 'admin';
+
+$CFG->directorypermissions = 0777;
+
+require_once(__DIR__ . '/lib/setup.php');
+
+// There is no php closing tag in this file,
+// it is intentional because it prevents trailing whitespace problems!
+PHPConfigEOF
+    chown www-data:www-data /var/www/html/config.php
+    echo "config.php generado."
+fi
+
 # Esperar a que la base de datos esté disponible
 echo "Esperando a que la base de datos esté disponible en ${MOODLE_DB_HOST}:${MOODLE_DB_PORT:-3306}..."
 until php -r "new mysqli('${MOODLE_DB_HOST}', '${MOODLE_DB_USER}', '${MOODLE_DB_PASSWORD}', '${MOODLE_DB_NAME}', ${MOODLE_DB_PORT:-3306});" 2>/dev/null; do

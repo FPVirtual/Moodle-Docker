@@ -109,6 +109,8 @@ services:
       options:
         max-size: "200m"
         max-file: "5"
+    ports: 
+      - "8080:80"
 
 networks:
   nginx-proxy_frontend:
