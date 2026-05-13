@@ -72,49 +72,20 @@ services:
       BLACKBOARD_SECRET: "${BLACKBOARD_SECRET}"
     volumes:
       - ./moodle-data:/var/www/moodledata
-      - phpsocket:/sock
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
     networks:
-      - nginx-proxy_frontend
       - fpd-internal
       - moodle_network
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "200m"
-        max-file: "5"
-
-  web:
-    image: nginx:latest
-    container_name: fpd-web
-    restart: always
-    depends_on:
-      - moodle
-    environment:
-      VIRTUAL_HOST: "${VIRTUAL_HOST}"
-      LETSENCRYPT_HOST: "${VIRTUAL_HOST}"
-      LETSENCRYPT_EMAIL: "${SSL_EMAIL}"
-    volumes:
-      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
-      - ./moodle-data:/var/www/moodledata:ro
-      - phpsocket:/sock
-      - /etc/timezone:/etc/timezone:ro
-      - /etc/localtime:/etc/localtime:ro
-    networks:
-      - nginx-proxy_frontend
-      - fpd-internal
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "200m"
-        max-file: "5"
-    ports: 
+    ports:
       - "8080:80"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "200m"
+        max-file: "5"
 
 networks:
-  nginx-proxy_frontend:
-    external: true
   fpd-internal:
     driver: bridge
   moodle_network:
@@ -122,4 +93,3 @@ networks:
 
 volumes:
   db_data:
-  phpsocket:
