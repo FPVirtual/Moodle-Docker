@@ -1,0 +1,13 @@
+username,password,email,firstname,lastname,role
+admin2,FPD_PASSWORD,fpd@educa.aragon.es,fp,distancia,admin
+profinspector,MANAGER_PASSWORD,inspeccion@educa.aragon.es,Inspección,Inspección,inspeccion
+estudiante1,estudiante,alumnado@education.catedu.es,Estudiante1,Uno,student
+estudiante2,estudiante,alumnado@education.catedu.es,Estudiante2,Dos,student
+estudiante3,estudiante,alumnado@education.catedu.es,Estudiante3,Tres,student
+estudiante4,estudiante,alumnado@education.catedu.es,Estudiante4,Cuatro,student
+estudiante5,estudiante,alumnado@education.catedu.es,Estudiante5,Cinco,student
+estudiante6,estudiante,alumnado@education.catedu.es,Estudiante6,Seis,student
+estudiante7,estudiante,alumnado@education.catedu.es,Estudiante7,Siete,student
+estudiante8,estudiante,alumnado@education.catedu.es,Estudiante8,Ocho,student
+estudiante9,estudiante,alumnado@education.catedu.es,Estudiante9,Nueve,student
+estudiante10,estudiante,alumnado@education.catedu.es,Estudiante10,Diez,student

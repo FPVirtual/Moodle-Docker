@@ -4,6 +4,7 @@
 
 FILES="/init-scripts/${INSTALL_TYPE}/moodle.sh
 /init-scripts/${INSTALL_TYPE}/plugins.sh
+/init-scripts/${INSTALL_TYPE}/load_usuarios.sh
 /init-scripts/${INSTALL_TYPE}/import_FPD_categories_and_courses.sh
 /init-scripts/${INSTALL_TYPE}/theme.sh"
 

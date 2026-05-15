@@ -26,23 +26,23 @@ echo >&2 "Importing categories and courses..."
 #############################################################################################
 echo "Creating users, roles,... of PFD"
 
-# Create admin user for FPD
+# Añadir admin2 (ya creado desde CSV) a siteadmins
+echo "Configurando admin2 como siteadmin..."
+FPD_ADMIN_USER_ID=$(moosh sql-run "SELECT id FROM mdl_user WHERE username='admin2'" | grep -oP '\d+' | head -1)
+if [ -n "$FPD_ADMIN_USER_ID" ]; then
+    moosh config-set siteadmins 2,"${FPD_ADMIN_USER_ID}"
+else
+    echo >&2 "WARNING: admin2 no encontrado, omitiendo siteadmins"
+fi
 
-echo "Creating admin user for FP..."
-FPD_ADMIN_USER_ID=$(moosh user-create --password "${FPD_PASSWORD}" --email "${FPD_EMAIL}" --digest 2 --city Aragón --country ES --firstname fp --lastname distancia admin2)
-moosh config-set siteadmins 2,"${FPD_ADMIN_USER_ID}"
-
-# Crear rol y usuario de inspección
+# Crear rol de inspección
 echo "Creating inspeccion role and configuring it..."
 INSPECCION_ROLE_ID=$(moosh role-create -d "Los usuarios con rol de inspección tienen acceso a determinados informes" -a manager -n "Inspeccion" inspeccion)
 
 # set permissions to inspeccion role
 moosh role-import -f /init-scripts/themes/fpdist/roles/role-inspeccion.xml
 
-# Creating user
-INSPECCION_USER_ID=$(moosh user-create --password "${MANAGER_PASSWORD}" --email inspeccion@educa.aragon.es --digest 2 --city Aragón --country ES --firstname Inspección --lastname Inspección profinspector)
-
-# Assiging user to r
+# Asignar rol inspeccion a profinspector (ya creado desde CSV)
 moosh user-assign-system-role profinspector inspeccion
 
 # Crear rol de jefaturas y usuarios
