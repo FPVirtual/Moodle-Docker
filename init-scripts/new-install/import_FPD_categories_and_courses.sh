@@ -46,7 +46,7 @@ fi
 
 # Crear rol de inspección
 echo "Creating inspeccion role and configuring it..."
-INSPECCION_ROLE_ID=$(moosh role-create -d "Los usuarios con rol de inspección tienen acceso a determinados informes" -a manager -n "Inspeccion" inspeccion)
+INSPECCION_ROLE_ID=$(moosh role-create -d "Los usuarios con rol de inspección tienen acceso a determinados informes" -a manager -n "Inspeccion" inspeccion | tail -1)
 
 # set permissions to inspeccion role
 moosh role-import -f /init-scripts/themes/fpdist/roles/role-inspeccion.xml
@@ -56,7 +56,7 @@ moosh user-assign-system-role profinspector inspeccion
 
 # Crear rol de jefaturas y usuarios
 echo "Creating jefatura-estudios role and configuring it..."
-JEFATURA_ROLE_ID=$(moosh role-create -d "Los usuarios con rol de inspección tienen acceso a determinados informes" -c system,category,course,block -n "Jefatura de estudios" jefatura-estudios)
+JEFATURA_ROLE_ID=$(moosh role-create -d "Los usuarios con rol de inspección tienen acceso a determinados informes" -c system,category,course,block -n "Jefatura de estudios" jefatura-estudios | tail -1)
 
 # Setting permissions to jefatura de estudios role
 moosh role-import -f /init-scripts/themes/fpdist/roles/role-jefatura-estudios.xml
@@ -90,7 +90,7 @@ while IFS=$'\t' read -r var_name parent visible description name
     fi
 
     echo "Creating category: ${name} (var=${var_name}, parent=${parent})"
-    eval "ID_CATEGORY_${var_name}=\$(moosh category-create -p \"\${parent_id}\" -v \"\${visible}\" -d \"\${description}\" \"\${name}\")"
+    eval "ID_CATEGORY_${var_name}=\$(moosh category-create -p \"\${parent_id}\" -v \"\${visible}\" -d \"\${description}\" \"\${name}\" | grep -oP '\\d+' | tail -1)"
 done < <(php "${DATA_DIR}/read_csv.php" "${DATA_DIR}/categorias.csv")
 
 #############################################################################################
@@ -162,7 +162,7 @@ while IFS=$'\t' read -r category_var shortname fullname visible
     if [ ! -f "/var/www/moodledata/repository/mbzs_curso_anterior/${shortname}.mbz" ]; then
         # Si no existe el curso, lo creo
         echo "***** The course /var/www/moodledata/repository/mbzs_curso_anterior/${shortname}.mbz doesn't exist, creating empty course ${shortname} into category ${CATEGORY}"
-        COURSE_ID=$(moosh course-create --category "${CATEGORY}" --fullname "${fullname}" --description "${fullname}" "${shortname}")
+        COURSE_ID=$(moosh course-create --category "${CATEGORY}" --fullname "${fullname}" --description "${fullname}" "${shortname}" | grep -oP '\d+' | tail -1)
     else
         # Si existe el curso lo restauro
         echo "***** Restoring /var/www/moodledata/repository/mbzs_curso_anterior/${shortname}.mbz course to category ${CATEGORY}"

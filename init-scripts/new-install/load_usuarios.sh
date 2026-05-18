@@ -14,7 +14,7 @@ fi
 
 echo >&2 "Cargando usuarios desde $CSV_FILE ..."
 
-while IFS=',' read -r username password_env email firstname lastname role; do
+while IFS=$'\t' read -r username password_env email firstname lastname role; do
     # Omitir cabecera
     [ "$username" = "username" ] && continue
 

@@ -85,8 +85,7 @@ if ! moodle_is_installed; then
         --adminemail="${MOODLE_ADMIN_EMAIL}" \
         --fullname="${MOODLE_SITE_FULLNAME}" \
         --shortname="${MOODLE_SITE_NAME}" \
-        --agree-license \
-        --non-interactive || true
+        --agree-license || true
 
     # Ejecutar scripts de personalización si es instalación nueva
     if [ "${INSTALL_TYPE:-new-install}" = "new-install" ]; then

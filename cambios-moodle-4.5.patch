@@ -1,0 +1,339 @@
+From 4e68924f53a0553b109380cba04108110d67f548 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Dar=C3=ADo=20Ure=C3=B1a?= <darioaxel@gmail.com>
+Date: Mon, 18 May 2026 14:47:44 +0200
+Subject: [PATCH] =?UTF-8?q?fix:=20compatibilidad=20Moodle=204.5.11=20+=20c?=
+ =?UTF-8?q?orrecciones=20de=20plugins=20y=20scripts=20de=20inicializaci?=
+ =?UTF-8?q?=C3=B3n?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+- entrypoint.sh: eliminada opción --non-interactive obsoleta en install_database.php
+- import_FPD_categories_and_courses.sh: corregido parsing de IDs de moosh (category-create, course-create, role-create)
+- load_usuarios.sh: corregido separador IFS=',' → IFS=$'\t' para leer output de read_csv.php
+- plugins.json: actualizados repositorios de format_tiles y local_mail a versiones compatibles con Moodle 4.5; corregido path de report_coursestats_v2
+- docker-compose.yml: ajustado puerto a 8087 y red moodle_network a bridge
+- docs: añadida auditoría de compatibilidad Plugins-Moodle-4.5-compatibilidad.md
+---
+ docker-compose.yml                            |   4 +-
+ docs/Plugins-Moodle-4.5-compatibilidad.md     | 176 ++++++++++++++++++
+ entrypoint.sh                                 |   3 +-
+ .../import_FPD_categories_and_courses.sh      |   8 +-
+ init-scripts/new-install/load_usuarios.sh     |   2 +-
+ plugins.json                                  |  12 +-
+ 6 files changed, 190 insertions(+), 15 deletions(-)
+ create mode 100644 docs/Plugins-Moodle-4.5-compatibilidad.md
+
+diff --git a/docker-compose.yml b/docker-compose.yml
+index 96b8c41..f067ecb 100644
+--- a/docker-compose.yml
++++ b/docker-compose.yml
+@@ -78,7 +78,7 @@ services:
+       - fpvirtual-internal
+       - moodle_network
+     ports:
+-      - "8080:80"
++      - "8087:80"
+     logging:
+       driver: "json-file"
+       options:
+@@ -89,7 +89,7 @@ networks:
+   fpvirtual-internal:
+     driver: bridge
+   moodle_network:
+-    external: true
++    driver: bridge
+ 
+ volumes:
+   db_data:
+diff --git a/docs/Plugins-Moodle-4.5-compatibilidad.md b/docs/Plugins-Moodle-4.5-compatibilidad.md
+new file mode 100644
+index 0000000..09c8581
+--- /dev/null
++++ b/docs/Plugins-Moodle-4.5-compatibilidad.md
+@@ -0,0 +1,176 @@
++# Auditoría de plugins para Moodle 4.5.x
++
++> Fecha: 2026-05-18  
++> Moodle destino: 4.5.11 (php:8.2-apache)  
++> Objetivo: documentar problemas de compatibilidad detectados al migrar desde la pila anterior y proponer repos/ramas corregidas.
++
++---
++
++## Resumen ejecutivo
++
++| Estado | Cantidad |
++|--------|----------|
++| Plugins corregidos / actualizados en `plugins.json` | 3 |
++| Plugins compatibles sin cambios | 18 |
++| Plugins obsoletos / con advertencias | 3 |
++
++---
++
++## Cambios aplicados a `plugins.json`
++
++### 1. `format_tiles` — repo obsoleto, causa fallo de instalación fatal
++
++**Problema detectado**
++- Repo anterior: `https://github.com/learnweb/moodle-format_tiles.git` (rama `main`)
++- Versión que traía: `2019052114` (Moodle 3.9 RC)
++- Error: `Class "format_base" not found` durante `install_database.php` y posteriormente en cada llamada a Moosh que crea cursos.
++- Causa: Moodle 4.5 refactorizó por completo el subsistema de formatos de curso. El plugin de Moodle 3.9 no carga la clase base ni es registrable por el componente installer.
++
++**Solución aplicada**
++- Nuevo repo: `https://github.com/TechnologyEnhancedLearning/moodle-format_tiles.git` (rama `main`)
++- Versión confirmada: `2026012200` — release `4.5.0.27`, requires `2024100100` (Moodle 4.5)
++- `supported = [405, 405]`
++
++### 2. `report_coursestats_v2` — path de instalación incorrecto
++
++**Problema detectado**
++- En `plugins.json` estaba declarado como:
++  - `name`: `report_coursestats`
++  - `component`: `report_coursestats`
++  - `moodle_path`: `report/coursestats`
++- El repositorio clona el código de `moodle-report_coursestats_v2.git`, cuyo `version.php` declara `$plugin->component = 'report_coursestats_v2'`.
++- Moodle detectaba el componente `report_coursestats_v2` en la ruta `report/coursestats` y abortaba la instalación con:
++  > "La extensión report_coursestats_v2 está instalada en la ubicación incorrecta ... la ubicación prevista es report/coursestats_v2"
++
++**Solución aplicada**
++- Corregidos `name`, `component` y `moodle_path` a valores con sufijo `_v2`:
++  - `name`: `report_coursestats_v2`
++  - `component`: `report_coursestats_v2`
++  - `moodle_path`: `report/coursestats_v2`
++
++**Advertencias persisten**
++- Durante la instalación sigue emitiendo:
++  - `Invalid get_string() identifier: 'sortcategoriesbyname'`
++  - `Duplicate admin page name: report_coursestats_v2`
++- Estos son defectos del propio plugin (sin actualizaciones desde 2020). No impiden la instalación pero ensucian los logs.
++- **Recomendación**: mantener `default_enabled: false` y no activar en producción a menos que se forkée y repare.
++
++### 3. `local_mail` — repo abandonado
++
++**Problema detectado**
++- Repo anterior: `https://github.com/IOC/moodle-local_mail.git` (rama `master`)
++- Último commit: 2019-03-22
++- Versión: `2017121404`, requires `2015111600` (Moodle 3.0)
++- Riesgo: en Moodle 4.5 pueden fallar las APIs de privacidad, messaging y filestorage que usa este plugin.
++
++**Solución aplicada**
++- Nuevo repo: `https://github.com/uaiblaine/moodle-local_mail.git` (rama `main`)
++- Versión confirmada: `2026051500`, requires `2022112800` (Moodle 4.1)
++- Commit reciente: mayo 2026
++
++---
++
++## Plugins verificados y compatibles (sin cambios necesarios)
++
++| Plugin | Repo | Rama | Versión | Requires |
++|--------|------|------|---------|----------|
++| `theme_moove` | willianmano/moodle-theme_moove | MOODLE_405_STABLE | — | — |
++| `block_xp` | FMCorz/moodle-block_xp | master | 2026042001 | 4.1 |
++| `availability_xp` | FMCorz/moodle-availability_xp | master | 2026042000 | muy bajo |
++| `block_configurable_reports` | jleyva/moodle-block_configurablereports | MOODLE_4x_STABLE | 2027050401 | 4.0 |
++| `quizaccess_onesession` | vadimonus/moodle-quizaccess_onesession | master | 2024032400 | 4.2 |
++| `mod_choicegroup` | ndunand/moodle-mod_choicegroup | master | 2026013100 | 4.3 |
++| `mod_board` | brickfield/moodle-mod_board | MOODLE_405_STABLE | — | — |
++| `mod_pdfannotator` | rwthmoodle/moodle-mod_pdfannotator | main | 2025121500 | 3.11 |
++| `block_grade_me` | remotelearner/Moodle-block_grade_me | MOODLE_405_STABLE | — | — |
++| `block_completion_progress` | deraadt/moodle-block_completion_progress | master | 2026042700 | **4.5** |
++| `atto_fontsize` | andrewnicols/moodle-atto_fontsize | main | 2023091901 | 2.7 |
++| `atto_fontfamily` | projectestac/moodle-atto_fontfamily | master | 2024110400 | 3.5 |
++| `atto_fullscreen` | dthies/moodle-atto_fullscreen | master | 2015122021* | 2.7 |
++| `qtype_gapfill` | marcusgreen/moodle-qtype_gapfill | main | 2026040300 | **4.5** |
++| `mod_attendance` | danmarsden/moodle-mod_attendance | MOODLE_405_STABLE | — | — |
++| `mod_checklist` | davosmith/moodle-checklist | master | 2026042400 | 4.1 |
++| `mod_jitsi` | SergioComeron/moodle-mod_jitsi | master | 2026051701 | **4.5** |
++| `block_sharing_cart` | donhinkelman/moodle-block_sharing_cart | master | 2025092900 | 4.2 |
++| `local_reminders` | isuru89/moodle-local_reminders | master | 2025082400 | 3.5 |
++| `atto_c4l` | rogersegu/moodle-atto_c4l | main | 2024122900 | 3.8 |
++
++> *Nota: `atto_fullscreen` tiene `version.php` con fecha 2015, pero el repo recibe commits de mantenimiento CI hasta 2026. Funciona en 4.5 porque Atto sigue presente (aunque deprecado).
++
++---
++
++## Problemas adicionales detectados en scripts de inicialización
++
++### `entrypoint.sh` — opción obsoleta de CLI de Moodle
++
++**Problema:** `install_database.php` se invocaba con `--non-interactive`.  
++En Moodle 4.5.x esa opción **no existe**; el script muestra `Unrecognised options: --non-interactive` y retorna error, por lo que la BD quedaba vacía y todo el init posterior fallaba.
++
++**Corrección:** eliminar `--non-interactive` de la línea de `install_database.php`.
++
++### `import_FPD_categories_and_courses.sh` — parsing de IDs de Moosh
++
++**Problema:** varios comandos Moosh devuelven texto descriptivo (ej. `"Created category X with id: 7."`) y el script almacenaba la cadena completa en lugar del número.
++
++**Impacto:**
++- Las variables de categoría contenían texto en vez de IDs numéricos.
++- `moosh course-create --category "Created category ... with id: 7."` fallaba con `invalidrecord` en `course_categories`.
++
++**Corrección:** añadir filtros `grep -oP '\d+' | tail -1` a:
++- `moosh category-create`
++- `moosh course-create`
++- `moosh role-create` (requería `tail -1` porque devuelve un array + ID)
++
++---
++
++## Recomendaciones para producción
++
++1. **Deshabilitar plugins obsoletos**:
++   - `report_coursestats_v2` (`default_enabled: false` ya está bien)
++   - `block_configurable_reports` (deprecado por Open LMS, retiro julio 2026)
++   - `atto_*` (Atto está deprecado; valorar migrar a TinyMCE equivalents)
++
++2. **Validar `format_tiles` en cursos reales**:
++   - Aunque el repo `TechnologyEnhancedLearning` indica compatibilidad 4.5, conviene crear un curso de prueba, cambiar al formato "Tiles" y verificar que la navegación por secciones y los iconos funcionan correctamente.
++
++3. **Revisar `local_mail` tras cambio de repo**:
++   - El nuevo repo `uaiblaine/moodle-local_mail` no es un fork del original IOC; es una continuación independiente. Verificar que las tablas y la lógica de adjuntos se comportan igual que en la versión anterior usada por FPD.
++
++4. **Actualizar `AGENTS.md` si se modifican convenciones**:
++   - Si se adopta la práctica de verificar `$plugin->requires >= 2024100700` antes de añadir un plugin al catálogo, documentar esa regla.
++
++---
++
++## Cómo regenerar la imagen tras cambios en `plugins.json`
++
++```bash
++# 1. Limpiar estado previo (si la instalación falló)
++docker compose --profile with-db down -v
++rm -rf moodle-data/* moodle-data/.*
++
++# 2. Reconstruir imagen (docker-clone-plugins.sh se ejecuta en build)
++docker compose --profile with-db up -d --build
++
++# 3. Verificar logs
++docker compose logs -f moodle
++```
++
++---
++
++## Problema adicional detectado post-instalación (2026-05-18)
++
++### `load_usuarios.sh` — separador de campos incorrecto
++
++**Síntoma:** los usuarios definidos en `usuarios.csv` (`admin2`, `profinspector`, `prof_cd_daw`, `estudiante1..10`) no se creaban durante la instalación. El log mostraba:
++
++```
++/init-scripts/new-install/load_usuarios.sh: line 22: : invalid variable name
++WARNING: admin2 no encontrado, omitiendo siteadmins
++WARNING: prof_cd_daw no encontrado, no se matriculará en cursos cd_daw
++```
++
++**Causa:** el script usaba `IFS=','` para leer el CSV, pero `read_csv.php` convierte el CSV a **tabuladores** (`\t`). Esto provocaba que la variable `password_env` quedara vacía y la indirección `${!password_env}` fallara.
++
++**Corrección:** cambiar `IFS=','` por `IFS=$'\t'` en el bucle `while read`.
++
++**Nota:** los usuarios `prof_je_*` (jefaturas de estudios) sí se crearon correctamente porque `import_FPD_categories_and_courses.sh` ya usaba `IFS=$'\t'`.
+diff --git a/entrypoint.sh b/entrypoint.sh
+index d610dca..70a416c 100755
+--- a/entrypoint.sh
++++ b/entrypoint.sh
+@@ -85,8 +85,7 @@ if ! moodle_is_installed; then
+         --adminemail="${MOODLE_ADMIN_EMAIL}" \
+         --fullname="${MOODLE_SITE_FULLNAME}" \
+         --shortname="${MOODLE_SITE_NAME}" \
+-        --agree-license \
+-        --non-interactive || true
++        --agree-license || true
+ 
+     # Ejecutar scripts de personalización si es instalación nueva
+     if [ "${INSTALL_TYPE:-new-install}" = "new-install" ]; then
+diff --git a/init-scripts/new-install/import_FPD_categories_and_courses.sh b/init-scripts/new-install/import_FPD_categories_and_courses.sh
+index 40d9fd9..8005408 100755
+--- a/init-scripts/new-install/import_FPD_categories_and_courses.sh
++++ b/init-scripts/new-install/import_FPD_categories_and_courses.sh
+@@ -46,7 +46,7 @@ fi
+ 
+ # Crear rol de inspección
+ echo "Creating inspeccion role and configuring it..."
+-INSPECCION_ROLE_ID=$(moosh role-create -d "Los usuarios con rol de inspección tienen acceso a determinados informes" -a manager -n "Inspeccion" inspeccion)
++INSPECCION_ROLE_ID=$(moosh role-create -d "Los usuarios con rol de inspección tienen acceso a determinados informes" -a manager -n "Inspeccion" inspeccion | tail -1)
+ 
+ # set permissions to inspeccion role
+ moosh role-import -f /init-scripts/themes/fpdist/roles/role-inspeccion.xml
+@@ -56,7 +56,7 @@ moosh user-assign-system-role profinspector inspeccion
+ 
+ # Crear rol de jefaturas y usuarios
+ echo "Creating jefatura-estudios role and configuring it..."
+-JEFATURA_ROLE_ID=$(moosh role-create -d "Los usuarios con rol de inspección tienen acceso a determinados informes" -c system,category,course,block -n "Jefatura de estudios" jefatura-estudios)
++JEFATURA_ROLE_ID=$(moosh role-create -d "Los usuarios con rol de inspección tienen acceso a determinados informes" -c system,category,course,block -n "Jefatura de estudios" jefatura-estudios | tail -1)
+ 
+ # Setting permissions to jefatura de estudios role
+ moosh role-import -f /init-scripts/themes/fpdist/roles/role-jefatura-estudios.xml
+@@ -90,7 +90,7 @@ while IFS=$'\t' read -r var_name parent visible description name
+     fi
+ 
+     echo "Creating category: ${name} (var=${var_name}, parent=${parent})"
+-    eval "ID_CATEGORY_${var_name}=\$(moosh category-create -p \"\${parent_id}\" -v \"\${visible}\" -d \"\${description}\" \"\${name}\")"
++    eval "ID_CATEGORY_${var_name}=\$(moosh category-create -p \"\${parent_id}\" -v \"\${visible}\" -d \"\${description}\" \"\${name}\" | grep -oP '\\d+' | tail -1)"
+ done < <(php "${DATA_DIR}/read_csv.php" "${DATA_DIR}/categorias.csv")
+ 
+ #############################################################################################
+@@ -162,7 +162,7 @@ while IFS=$'\t' read -r category_var shortname fullname visible
+     if [ ! -f "/var/www/moodledata/repository/mbzs_curso_anterior/${shortname}.mbz" ]; then
+         # Si no existe el curso, lo creo
+         echo "***** The course /var/www/moodledata/repository/mbzs_curso_anterior/${shortname}.mbz doesn't exist, creating empty course ${shortname} into category ${CATEGORY}"
+-        COURSE_ID=$(moosh course-create --category "${CATEGORY}" --fullname "${fullname}" --description "${fullname}" "${shortname}")
++        COURSE_ID=$(moosh course-create --category "${CATEGORY}" --fullname "${fullname}" --description "${fullname}" "${shortname}" | grep -oP '\d+' | tail -1)
+     else
+         # Si existe el curso lo restauro
+         echo "***** Restoring /var/www/moodledata/repository/mbzs_curso_anterior/${shortname}.mbz course to category ${CATEGORY}"
+diff --git a/init-scripts/new-install/load_usuarios.sh b/init-scripts/new-install/load_usuarios.sh
+index fb4f848..6449b6f 100755
+--- a/init-scripts/new-install/load_usuarios.sh
++++ b/init-scripts/new-install/load_usuarios.sh
+@@ -14,7 +14,7 @@ fi
+ 
+ echo >&2 "Cargando usuarios desde $CSV_FILE ..."
+ 
+-while IFS=',' read -r username password_env email firstname lastname role; do
++while IFS=$'\t' read -r username password_env email firstname lastname role; do
+     # Omitir cabecera
+     [ "$username" = "username" ] && continue
+ 
+diff --git a/plugins.json b/plugins.json
+index ae5350e..0b29b6d 100644
+--- a/plugins.json
++++ b/plugins.json
+@@ -22,7 +22,7 @@
+       "category": "course_format",
+       "moodle_path": "course/format/tiles",
+       "install_method": "moosh",
+-      "git_url": "https://github.com/learnweb/moodle-format_tiles.git",
++      "git_url": "https://github.com/TechnologyEnhancedLearning/moodle-format_tiles.git",
+       "git_branch": "main",
+       "default_enabled": true,
+       "has_postinstall_actions": true
+@@ -58,8 +58,8 @@
+       "category": "communication",
+       "moodle_path": "local/mail",
+       "install_method": "moosh",
+-      "git_url": "https://github.com/IOC/moodle-local_mail.git",
+-      "git_branch": "master",
++      "git_url": "https://github.com/uaiblaine/moodle-local_mail.git",
++      "git_branch": "main",
+       "default_enabled": true,
+       "has_postinstall_actions": true
+     },
+@@ -77,11 +77,11 @@
+       "warning": "DEPRECADO. Open LMS retira soporte en julio 2026. Evaluar alternativa antes de habilitar."
+     },
+     {
+-      "name": "report_coursestats",
+-      "component": "report_coursestats",
++      "name": "report_coursestats_v2",
++      "component": "report_coursestats_v2",
+       "description": "Estadisticas de uso de cursos (foro, repositorio, actividades).",
+       "category": "reporting",
+-      "moodle_path": "report/coursestats",
++      "moodle_path": "report/coursestats_v2",
+       "install_method": "moosh",
+       "git_url": "https://github.com/dired-ufla/moodle-report_coursestats_v2.git",
+       "git_branch": "main",
+-- 
+2.47.3
+

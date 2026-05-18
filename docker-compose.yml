@@ -78,7 +78,7 @@ services:
       - fpvirtual-internal
       - moodle_network
     ports:
-      - "8080:80"
+      - "8087:80"
     logging:
       driver: "json-file"
       options:
@@ -89,7 +89,7 @@ networks:
   fpvirtual-internal:
     driver: bridge
   moodle_network:
-    external: true
+    driver: bridge
 
 volumes:
   db_data:

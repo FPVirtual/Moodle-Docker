@@ -22,7 +22,7 @@
       "category": "course_format",
       "moodle_path": "course/format/tiles",
       "install_method": "moosh",
-      "git_url": "https://github.com/learnweb/moodle-format_tiles.git",
+      "git_url": "https://github.com/TechnologyEnhancedLearning/moodle-format_tiles.git",
       "git_branch": "main",
       "default_enabled": true,
       "has_postinstall_actions": true
@@ -58,8 +58,8 @@
       "category": "communication",
       "moodle_path": "local/mail",
       "install_method": "moosh",
-      "git_url": "https://github.com/IOC/moodle-local_mail.git",
-      "git_branch": "master",
+      "git_url": "https://github.com/uaiblaine/moodle-local_mail.git",
+      "git_branch": "main",
       "default_enabled": true,
       "has_postinstall_actions": true
     },
@@ -77,11 +77,11 @@
       "warning": "DEPRECADO. Open LMS retira soporte en julio 2026. Evaluar alternativa antes de habilitar."
     },
     {
-      "name": "report_coursestats",
-      "component": "report_coursestats",
+      "name": "report_coursestats_v2",
+      "component": "report_coursestats_v2",
       "description": "Estadisticas de uso de cursos (foro, repositorio, actividades).",
       "category": "reporting",
-      "moodle_path": "report/coursestats",
+      "moodle_path": "report/coursestats_v2",
       "install_method": "moosh",
       "git_url": "https://github.com/dired-ufla/moodle-report_coursestats_v2.git",
       "git_branch": "main",
