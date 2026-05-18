@@ -12,7 +12,3 @@ services:
   moodle:
     volumes:
       - ${MOODLE_CODE_PATH:-./moodle-code}:/var/www/html
-
-  web:
-    volumes:
-      - ${MOODLE_CODE_PATH:-./moodle-code}:/var/www/html:ro

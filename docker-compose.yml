@@ -1,7 +1,7 @@
 services:
   db:
     image: mariadb:10.11.16
-    container_name: fpd-db
+    container_name: fpvirtual-db
     restart: always
     profiles: ["with-db"]
     environment:
@@ -12,7 +12,7 @@ services:
     volumes:
       - db_data:/var/lib/mysql
     networks:
-      - fpd-internal
+      - fpvirtual-internal
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       interval: 10s
@@ -21,10 +21,10 @@ services:
 
   redis:
     image: redis:7-alpine
-    container_name: fpd-redis
+    container_name: fpvirtual-redis
     restart: always
     networks:
-      - fpd-internal
+      - fpvirtual-internal
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
@@ -35,7 +35,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: fpd-moodle
+    container_name: fpvirtual-moodle
     restart: always
     depends_on:
       redis:
@@ -75,7 +75,7 @@ services:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
     networks:
-      - fpd-internal
+      - fpvirtual-internal
       - moodle_network
     ports:
       - "8080:80"
@@ -86,7 +86,7 @@ services:
         max-file: "5"
 
 networks:
-  fpd-internal:
+  fpvirtual-internal:
     driver: bridge
   moodle_network:
     external: true

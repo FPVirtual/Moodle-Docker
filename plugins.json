@@ -11,7 +11,7 @@
       "moodle_path": "theme/moove",
       "install_method": "moosh",
       "git_url": "https://github.com/willianmano/moodle-theme_moove.git",
-      "git_branch": "MOODLE_401_STABLE",
+      "git_branch": "MOODLE_405_STABLE",
       "default_enabled": true,
       "has_postinstall_actions": true
     },
@@ -121,7 +121,7 @@
       "moodle_path": "mod/board",
       "install_method": "moosh",
       "git_url": "https://github.com/brickfield/moodle-mod_board.git",
-      "git_branch": "main",
+      "git_branch": "MOODLE_405_STABLE",
       "default_enabled": true,
       "has_postinstall_actions": true
     },
@@ -145,7 +145,7 @@
       "moodle_path": "blocks/grade_me",
       "install_method": "moosh",
       "git_url": "https://github.com/remotelearner/Moodle-block_grade_me.git",
-      "git_branch": "master",
+      "git_branch": "MOODLE_405_STABLE",
       "default_enabled": true,
       "has_postinstall_actions": true
     },
@@ -219,7 +219,7 @@
       "moodle_path": "mod/attendance",
       "install_method": "moosh",
       "git_url": "https://github.com/danmarsden/moodle-mod_attendance.git",
-      "git_branch": "MOODLE_401_STABLE",
+      "git_branch": "MOODLE_405_STABLE",
       "default_enabled": true,
       "has_postinstall_actions": false
     },
@@ -231,7 +231,7 @@
       "moodle_path": "mod/checklist",
       "install_method": "moosh",
       "git_url": "https://github.com/davosmith/moodle-checklist.git",
-      "git_branch": "MOODLE_401_STABLE",
+      "git_branch": "master",
       "default_enabled": true,
       "has_postinstall_actions": false
     },
@@ -256,7 +256,7 @@
       "moodle_path": "blocks/sharing_cart",
       "install_method": "moosh",
       "git_url": "https://github.com/donhinkelman/moodle-block_sharing_cart.git",
-      "git_branch": "MOODLE_41_STABLE",
+      "git_branch": "master",
       "default_enabled": false,
       "has_postinstall_actions": false,
       "warning": "Muy util pero NO esta en los scripts PLUGINS por defecto. Habilitar si se usa."

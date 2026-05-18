@@ -1,43 +1,56 @@
 # new-moodle - Despliegue contenerizado de FP Virtual / Distancia (FPD)
 
-Este proyecto es una versión modernizada y autocontenida del despliegue de Moodle para **FP Virtual Aragón (FPD)**, utilizando **imágenes oficiales de Docker** (`php:8.1-fpm`, `nginx`, `mariadb`, `redis`).
+Este proyecto es una versión modernizada y autocontenida del despliegue de Moodle para **FP Virtual Aragón (FPD)**, utilizando **imágenes oficiales de Docker** (`php:8.2-apache`, `mariadb`, `redis`).
 
 ## Diferencias clave respecto al proyecto anterior
 
-| Aspecto | Proyecto anterior | `new-moodle` |
-|---------|-------------------|--------------|
-| Imagen Moodle | `cateduac/moodle:4.1.3-nginx-fpm-unoconv` (personalizada) | `php:8.1-fpm` oficial + Dockerfile propio |
-| Base de datos | Externa (no definida en compose) | MariaDB 10.6 **opcional** en `docker-compose.yml` (perfil `with-db`) o **externa** configurable |
-| Código Moodle | Bind mount (`./moodle-code`) | Empaquetado dentro de la imagen Docker o **bind mount externo** configurable |
+| Aspecto | Proyecto anterior | `new-moodle` (rama apache-moodle) |
+|---------|-------------------|-----------------------------------|
+| Imagen Moodle | `php:8.1-fpm` + nginx separado | `php:8.2-apache` (mod_php integrado) |
+| Base de datos | Externa (no definida en compose) | MariaDB **opcional** en `docker-compose.yml` (perfil `with-db`) o **externa** configurable |
+| Código Moodle | Bind mount (`./moodle-code`) o copiado del host | Descargado desde GitHub releases durante el build |
+| Plugins | Hardcoded en Dockerfile o copiados | Catálogo `plugins.json` + `docker-clone-plugins.sh` |
 | Datos (`moodle-data`) | Bind mount | **Mantiene bind mount** para facilitar backups |
+| Gestión usuarios | Hardcodeado en scripts | CSV `usuarios.csv` + `load_usuarios.sh` |
 | Scripts init | Genéricos para varios tipos de centro | **Específicos para FPD** (simplificados) |
 
 ## Estructura
 
 ```
 new-moodle/
-├── Dockerfile                          # Imagen propia basada en php:8.1-fpm
-├── docker-compose.yml                  # Stack completo: db + redis + moodle + nginx
-├── .env                                # Variables de entorno (ejemplo para FPD)
+├── Dockerfile                          # Imagen propia basada en php:8.2-apache
+├── docker-compose.yml                  # Stack: db (opcional) + redis + moodle
+├── docker-compose.override.yml.example # Override para montar código Moodle externo
+├── .env.example                        # Plantilla de variables de entorno
 ├── entrypoint.sh                       # Entrypoint que instala/configura Moodle
-├── moodle-code/                        # Código fuente de Moodle 4.1.19
-├── moodle-data/                        # Carpeta vacía para datos (bind mount)
-├── nginx/
-│   └── default.conf                    # Configuración de Nginx
+├── plugins.json                        # Catálogo maestro de plugins de terceros
+├── apache-conf/
+│   └── 000-default.conf                # Configuración de Apache VirtualHost
 ├── php-conf/                           # Configuraciones PHP (uploads, opcache...)
-├── fpm-conf/                           # Configuraciones PHP-FPM
 ├── init-scripts/
 │   ├── init.sh                         # Orquestador
+│   ├── lib/
+│   │   ├── docker-clone-plugins.sh    # Clona plugins en build-time
+│   │   └── plugins-lib.sh             # Helpers bash para leer plugins.json
 │   ├── new-install/
 │   │   ├── moodle.sh                   # Configuración específica FPD
-│   │   ├── plugins.sh                  # Instalación de plugins FPD
+│   │   ├── plugins.sh                  # Instalación de plugins desde plugins.json
 │   │   ├── theme.sh                    # Tema Moove personalizado FPD
-│   │   └── import_FPD_categories_and_courses.sh
+│   │   ├── import_FPD_categories_and_courses.sh
+│   │   ├── load_usuarios.sh            # Carga usuarios desde CSV
+│   │   └── data/
+│   │       └── usuarios.csv            # Usuarios iniciales
 │   └── upgrade/
 │       ├── moodle.sh
 │       ├── plugins.sh
 │       └── theme.sh
-├── themes/fpdist/                      # Assets del tema FPD
+├── custom/                             # Scripts PHP custom (copiados a /var/www/html)
+│   ├── decalogo/
+│   ├── faqs/
+│   ├── private-reports/
+│   ├── soporte/
+│   └── userpix/
+├── moodle-data/                        # Datos de Moodle (bind mount)
 └── scripts/
     └── backup.sh                       # Backup coordinado BD + moodle-data
 ```
@@ -45,14 +58,14 @@ new-moodle/
 ## Requisitos previos
 
 1. Docker y Docker Compose instalados.
-2. Red externa del proxy creada:
+2. Red externa creada (si usas BD externa o proxy inverso):
    ```bash
-   docker network create nginx-proxy_frontend
+   docker network create moodle_network
    ```
 3. Copiar y personalizar el archivo de entorno:
    ```bash
    cp .env.example .env
-   # Edita .env con los valores reales (dominio, contraseñas, etc.)
+   # Edita .env con los valores reales (dominio, contraseñas, plugins, etc.)
    ```
 
 ## Puesta en marcha
@@ -89,36 +102,47 @@ Si ya tienes un contenedor MariaDB en el servidor (u otra instancia de MariaDB/M
    docker compose up -d
    ```
 
-### Con código Moodle externo
+### Con código Moodle externo (desarrollo)
 
-Si prefieres montar el código de Moodle desde el host (útil para desarrollo o para gestionar el código fuera del contenedor):
+Si prefieres montar el código de Moodle desde el host (útil para desarrollo):
 
 1. En `.env`, define la ruta al código:
    ```env
    MOODLE_CODE_PATH=./moodle-code
-   # o una ruta absoluta:
-   # MOODLE_CODE_PATH=/opt/moodle-code
    ```
 2. Activa el override de Docker Compose:
    ```bash
    cp docker-compose.override.yml.example docker-compose.override.yml
    ```
-3. Asegúrate de que el directorio contenga el código de Moodle (por ejemplo, descargado desde [download.moodle.org](https://download.moodle.org)).
-4. Levanta el stack (con o sin perfil `with-db` según tu configuración de DB):
+3. Asegúrate de que el directorio contenga el código de Moodle.
+4. Levanta el stack:
    ```bash
-   docker compose --profile with-db up -d
-   # o sin DB interna:
-   # docker compose up -d
+   docker compose up -d
    ```
 
-> **Nota:** si el directorio indicado en `MOODLE_CODE_PATH` está vacío, el contenedor copiará automáticamente el código incluido en la imagen Docker al volumen montado.
+> **Nota:** si el directorio de `MOODLE_CODE_PATH` está vacío, el contenedor copia automáticamente el código de la imagen Docker al volumen montado.
 >
 > Para volver a usar el código empaquetado en la imagen, elimina o renombra `docker-compose.override.yml`.
 
 La primera vez que arranca:
-1. El `entrypoint.sh` instala Moodle automáticamente (`admin/cli/install.php`).
-2. Luego ejecuta `init-scripts/init.sh`, que a su vez lanza `moodle.sh`, `plugins.sh`, `theme.sh` y `import_FPD_categories_and_courses.sh`.
-3. Se crea el archivo `/var/www/moodledata/.moodle-installed` para no repetir la instalación en reinicios.
+1. El `entrypoint.sh` genera `config.php` automáticamente desde variables de entorno.
+2. Instala Moodle (`admin/cli/install_database.php`) si la BD está vacía.
+3. Ejecuta `init-scripts/init.sh`, que lanza `moodle.sh`, `plugins.sh`, `theme.sh`, `import_FPD_categories_and_courses.sh` y `load_usuarios.sh`.
+4. Se crea el archivo `/var/www/moodledata/.moodle-installed` para no repetir la instalación en reinicios.
+
+## Plugins de terceros
+
+Los plugins se definen en `plugins.json` y se clonan durante el build de la imagen.
+
+Para habilitar/deshabilitar plugins en runtime, usa variables `PLUGIN_*` en `.env`:
+
+```env
+PLUGIN_THEME_MOOVE=true
+PLUGIN_BLOCK_CONFIGURABLE_REPORTS=false
+# PLUGIN_MOD_JITSI=false
+```
+
+Ver `plugins.json` para el listado completo con descripciones y advertencias.
 
 ## Backups
 
@@ -133,21 +157,25 @@ Genera en `./backups/`:
 
 ## Actualizaciones (upgrade)
 
-1. Actualiza el código en `moodle-code/`.
-2. Cambia en `.env`:
+1. Actualiza `MOODLE_VERSION` en el `Dockerfile`.
+2. Actualiza ramas de plugins en `plugins.json` si es necesario.
+3. Cambia en `.env`:
    ```env
    INSTALL_TYPE=upgrade
-   VERSION=4.1.x
+   VERSION=4.5.x
    ```
-3. Reconstruye y reinicia:
+4. Reconstruye y reinicia:
    ```bash
    docker compose up -d --build
    ```
-4. Vuelve a poner `INSTALL_TYPE=new-install` cuando termine.
+5. Vuelve a poner `INSTALL_TYPE=new-install` cuando termine.
+
+> **Regla de oro**: nunca saltar más de una versión mayor de Moodle a la vez (ej. 4.5 → 4.6 → 4.7).
 
 ## Notas
 
 - `moodle-data` se mantiene como **carpeta local** para facilitar backups y acceso directo.
-- El código de Moodle puede ir **dentro de la imagen Docker** (despliegue reproducible) o montarse **desde el host** mediante la variable `MOODLE_CODE_PATH`.
+- El código de Moodle va **dentro de la imagen Docker** (despliegue reproducible). Para desarrollo se puede montar desde el host.
 - La base de datos puede ser el contenedor **MariaDB incluido** (perfil `with-db`) o una instancia **externa** ya existente.
 - Los scripts de inicialización van dentro de la imagen para garantizar reproducibilidad.
+- Apache escucha en el puerto 80 del contenedor, mapeado a `8080` en el host.

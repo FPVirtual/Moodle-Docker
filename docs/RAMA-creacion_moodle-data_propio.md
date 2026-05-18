@@ -1,7 +1,9 @@
 # Rama `creacion_moodle-data_propio` — Documento de trabajo
 
+> **Nota**: Esta rama evolucionó a `apache-moodle`. Este documento se mantiene como referencia histórica. Para el estado actual del proyecto, ver `RAMA-apache-moodle.md`.
+
 > Fecha de creación: 2026-04-21
-> Estado: En desarrollo / Testing
+> Estado: Histórico (evolucionado a `apache-moodle`)
 > Rama Git: `creacion_moodle-data_propio`
 
 ---

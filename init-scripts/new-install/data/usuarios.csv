@@ -1,5 +1,5 @@
 username,password,email,firstname,lastname,role
-admin2,FPD_PASSWORD,fpd@educa.aragon.es,fp,distancia,admin
+admin2,FPVIRTUAL_PASSWORD,fpd@educa.aragon.es,fp,distancia,admin
 profinspector,MANAGER_PASSWORD,inspeccion@educa.aragon.es,Inspección,Inspección,inspeccion
 estudiante1,estudiante,alumnado@education.catedu.es,Estudiante1,Uno,student
 estudiante2,estudiante,alumnado@education.catedu.es,Estudiante2,Dos,student

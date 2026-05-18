@@ -1,7 +1,7 @@
 # Dockerfile para Moodle FPD basado en imágenes oficiales de Docker
-# Base: PHP-Apache 8.1 (oficial) - compatible con Moodle 4.1.x
+# Base: PHP-Apache 8.2 (oficial) - compatible con Moodle 4.5.x
 
-FROM php:8.1-apache
+FROM php:8.2-apache
 
 # Instalar dependencias del sistema y extensiones PHP necesarias para Moodle
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -70,7 +70,7 @@ RUN git clone https://github.com/tmuras/moosh.git /opt/moosh \
 RUN mkdir -p /var/www/moodledata && chown -R www-data:www-data /var/www/moodledata
 
 # Descargar Moodle 4.1.19 oficial desde GitHub
-ARG MOODLE_VERSION=4.1.19
+ARG MOODLE_VERSION=4.5.11
 RUN curl -L https://github.com/moodle/moodle/archive/refs/tags/v${MOODLE_VERSION}.tar.gz | tar xz -C /tmp \
     && mv /tmp/moodle-* /usr/src/moodle \
     && cp -r /usr/src/moodle/* /var/www/html/ \

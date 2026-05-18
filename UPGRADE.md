@@ -1,6 +1,6 @@
 # Guía de actualización de Moodle en `new-moodle`
 
-Este documento describe paso a paso cómo actualizar Moodle a la siguiente versión estable dentro del entorno contenerizado de `new-moodle`.
+Este documento describe paso a paso cómo actualizar Moodle a la siguiente versión estable dentro del entorno contenerizado de `new-moodle` (rama `apache-moodle`).
 
 > **⚠️ ADVERTENCIA IMPORTANTE**
 > Nunca actualices en producción sin haber probado previamente el proceso en un entorno de desarrollo o staging.
@@ -9,11 +9,13 @@ Este documento describe paso a paso cómo actualizar Moodle a la siguiente versi
 
 ## Resumen del proceso
 
-En un despliegue basado en Docker, actualizar Moodle implica **tres acciones principales**:
+En un despliegue basado en Docker con imagen autocontenida, actualizar Moodle implica **tres acciones principales**:
 
-1. **Actualizar el código fuente** (`moodle-code/`).
-2. **Reconstruir la imagen Docker** para que incluya ese nuevo código.
-3. **Ejecutar el script de upgrade** de Moodle (`admin/cli/upgrade.php`), lo cual se hace automáticamente mediante el `entrypoint.sh` cuando `INSTALL_TYPE=upgrade`.
+1. **Actualizar la versión en el `Dockerfile`** (`ARG MOODLE_VERSION`).
+2. **Verificar compatibilidad de plugins** en `plugins.json` (ramas git, URLs).
+3. **Reconstruir la imagen Docker** y ejecutar el upgrade automático cuando `INSTALL_TYPE=upgrade`.
+
+> Diferencia clave respecto a despliegues anteriores: ya no se actualiza código en `moodle-code/`. El código se descarga durante el build.
 
 ---
 
@@ -22,7 +24,7 @@ En un despliegue basado en Docker, actualizar Moodle implica **tres acciones pri
 Antes de tocar nada, realiza un backup coordinado de la base de datos y de `moodle-data`.
 
 ```bash
-cd /var/moodle-docker-deploy/www.fpvirtualaragon.es/new-moodle
+cd /var/moodle-docker-deploy/moodle-docker-test/Moodle-Docker
 ./scripts/backup.sh
 ```
 
@@ -44,55 +46,51 @@ docker compose exec moodle moosh -n maintenance-on
 
 ---
 
-## Paso 2. Descargar y preparar el nuevo código de Moodle
+## Paso 2. Actualizar versión en el Dockerfile
 
-### 2.1. Obtener la nueva versión
+Edita el `Dockerfile` y cambia la versión de Moodle:
 
-Descarga el paquete ZIP/TAR de la nueva versión estable desde [download.moodle.org](https://download.moodle.org) o mediante `wget`:
+```dockerfile
+# Antes:
+ARG MOODLE_VERSION=4.5.11
 
-```bash
-# Ejemplo para Moodle 4.2.x (cambia la URL por la versión objetivo)
-wget https://download.moodle.org/download.php/direct/stable402/moodle-4.2.5.tgz -O /tmp/moodle-new.tgz
+# Después (ejemplo para 4.5.12):
+ARG MOODLE_VERSION=4.5.12
 ```
 
-### 2.2. Extraer y reemplazar `moodle-code/`
-
-```bash
-# Mover el actual por si necesitas rollback rápido
-mv moodle-code moodle-code-backup-$(date +%Y%m%d)
-
-# Extraer el nuevo código
-mkdir -p moodle-code
-tar -xzf /tmp/moodle-new.tgz -C . --strip-components=1
-```
-
-> **Nota sobre `config.php`:** El archivo `config.php` del proyecto actual ya está adaptado para leer las variables de entorno (`MOODLE_DB_HOST`, `MOODLE_DB_NAME`, etc.). Si el nuevo paquete de Moodle sobrescribe `config.php`, **debes recuperar el anterior**:
-> ```bash
-> cp moodle-code-backup-YYYYMMDD/config.php moodle-code/config.php
-> ```
-> Verifica que `$CFG->dataroot` apunte a `/var/www/moodledata` y que la base de datos use `getenv()`.
+> **Nota sobre Moodle 4.5 LTS**: Moodle 4.5 es una versión LTS (Long Term Support). Los upgrades dentro de 4.5.x son parches de seguridad y bugfixes que no requieren cambios en plugins.
+> Si saltas a una nueva versión mayor (ej. 4.6), asegúrate de seguir la "Regla de oro" al final de este documento.
 
 ---
 
 ## Paso 3. Verificar compatibilidad de plugins
 
-Si usas plugins de terceros (instalados por `init-scripts/new-install/plugins.sh` o `init-scripts/upgrade/plugins.sh`), verifica en [moodle.org/plugins](https://moodle.org/plugins) que existan versiones compatibles con la nueva versión de Moodle.
+Revisa `plugins.json` y verifica en [moodle.org/plugins](https://moodle.org/plugins) que los plugins tengan versiones compatibles con la nueva versión de Moodle.
 
-- Actualiza la lista de plugins en `init-scripts/upgrade/plugins.sh` si es necesario.
+- Actualiza `git_branch` en `plugins.json` si es necesario (ej. de `MOODLE_405_STABLE` a `MOODLE_406_STABLE`).
 - Elimina plugins obsoletos o que ya no tengan soporte.
-- Si algún plugin personalizado está en `moodle-code/`, asegúrate de que también se haya actualizado.
+- Si algún plugin personalizado está en `custom/`, asegúrate de que también se haya actualizado.
+
+Puedes verificar rápidamente las URLs de los repositorios:
+
+```bash
+jq -r '.plugins[].git_url' plugins.json | while read url; do
+  status=$(curl -s -o /dev/null -w "%{http_code}" "$url")
+  echo "$status $url"
+done
+```
 
 ---
 
-## Paso 4. Ajustar versiones en `.env` y en scripts
+## Paso 4. Ajustar versiones en `.env`
 
 Edita el archivo `.env` y actualiza la variable de versión:
 
 ```env
-VERSION=4.2.5
+VERSION=4.5.12
 ```
 
-Si los scripts de upgrade (`init-scripts/upgrade/`) necesitan cambios específicos para la nueva versión (por ejemplo, cambios en configuraciones o nuevos pasos de limpieza), edítalos antes de continuar.
+Si los scripts de upgrade (`init-scripts/upgrade/`) necesitan cambios específicos para la nueva versión, edítalos antes de continuar.
 
 ---
 
@@ -113,7 +111,7 @@ INSTALL_TYPE=upgrade
 docker compose up -d --build
 ```
 
-Docker construirá una nueva imagen con el código actualizado y reiniciará el servicio `moodle`.
+Docker construirá una nueva imagen descargando el código actualizado de Moodle y reiniciará el servicio `moodle`.
 
 Durante el arranque, el `entrypoint.sh` hará lo siguiente:
 1. Detectará que Moodle **ya está instalado** (las tablas existen en la BD).
@@ -121,7 +119,7 @@ Durante el arranque, el `entrypoint.sh` hará lo siguiente:
    ```bash
    php /var/www/html/admin/cli/upgrade.php --non-interactive --allow-unstable
    ```
-3. Luego ejecutará `init-scripts/init.sh`, que a su vez lanzará:
+3. Luego ejecutará `/init-scripts/init.sh`, que a su vez lanzará:
    - `init-scripts/upgrade/moodle.sh`
    - `init-scripts/upgrade/plugins.sh`
    - `init-scripts/upgrade/theme.sh`
@@ -207,21 +205,21 @@ Si algo sale mal y necesitas volver atrás **antes de que los usuarios hayan ent
    ```bash
    docker compose exec -T db mysql -u root -p${MYSQL_ROOT_PASSWORD} ${MOODLE_DB_NAME} < backups/backup_db_YYYYMMDD_HHMMSS.sql
    ```
+   > Si usas BD externa, ajusta el comando según tu configuración.
 3. **Restaurar `moodle-data`**:
    ```bash
    rm -rf moodle-data/*
    tar -xzf backups/backup_moodledata_YYYYMMDD_HHMMSS.tar.gz --strip-components=1
    ```
-4. **Restaurar el código anterior**:
+4. **Volver a la imagen anterior**:
    ```bash
-   rm -rf moodle-code
-   mv moodle-code-backup-YYYYMMDD moodle-code
+   # Si etiquetaste la imagen anterior:
+   docker compose down
+   docker tag new-moodle-moodle:anterior new-moodle-moodle:latest
+   docker compose up -d
    ```
-5. **Reconstruir y levantar con la versión anterior**:
-   ```bash
-   docker compose up -d --build
-   ```
-6. **Quitar modo mantenimiento**:
+   > O simplemente revierte el `MOODLE_VERSION` en el Dockerfile y reconstruye.
+5. **Quitar modo mantenimiento**:
    ```bash
    docker compose exec moodle moosh -n maintenance-off
    ```
@@ -232,9 +230,8 @@ Si algo sale mal y necesitas volver atrás **antes de que los usuarios hayan ent
 
 - [ ] Backup de BD y `moodle-data` realizado.
 - [ ] Moodle en modo mantenimiento.
-- [ ] Nuevo código descargado y colocado en `moodle-code/`.
-- [ ] `config.php` preservado o adaptado.
-- [ ] Plugins verificados y scripts de upgrade actualizados.
+- [ ] `MOODLE_VERSION` actualizada en `Dockerfile`.
+- [ ] Plugins verificados en `plugins.json` (ramas git, URLs).
 - [ ] `.env` actualizado con la nueva `VERSION`.
 - [ ] `INSTALL_TYPE=upgrade` en `.env`.
 - [ ] `docker compose up -d --build` ejecutado.
@@ -247,6 +244,6 @@ Si algo sale mal y necesitas volver atrás **antes de que los usuarios hayan ent
 
 ## Notas adicionales
 
-- **Saltos de versión:** Moodle recomienda no saltar más de una versión mayor a la vez. Por ejemplo, si estás en 4.1, sube primero a 4.2, y luego a 4.3. Nunca directamente de 4.1 a 4.4.
+- **Saltos de versión:** Moodle recomienda no saltar más de una versión mayor a la vez. Por ejemplo, si estás en 4.5, sube primero a 4.6, y luego a 4.7. Nunca directamente de 4.5 a 4.8.
 - **Plugins no compatibles:** Si un plugin esencial no tiene versión para la nueva release de Moodle, pospon la actualización hasta que esté disponible, o busca una alternativa soportada.
-- `moodle-code-old` del proyecto original **no se usa** en `new-moodle`. Puedes ignorarlo o eliminarlo del entorno de producción final para ahorrar espacio.
+- **Imagen autocontenida:** Como el código ya no se monta desde `moodle-code/`, el rollback es más sencillo: solo necesitas cambiar el `MOODLE_VERSION` en el Dockerfile y reconstruir.
