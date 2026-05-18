@@ -35,6 +35,15 @@ else
     echo >&2 "WARNING: admin2 no encontrado, omitiendo siteadmins"
 fi
 
+# Buscar ID del profesor de CD DAW (creado desde CSV)
+echo "Buscando profesor CD DAW..."
+PROF_CD_DAW_USER_ID=$(moosh sql-run "SELECT id FROM mdl_user WHERE username='prof_cd_daw'" | grep -oP '\d+' | head -1)
+if [ -n "$PROF_CD_DAW_USER_ID" ]; then
+    echo "Profesor CD DAW encontrado: ID=${PROF_CD_DAW_USER_ID}"
+else
+    echo >&2 "WARNING: prof_cd_daw no encontrado, no se matriculará en cursos cd_daw"
+fi
+
 # Crear rol de inspección
 echo "Creating inspeccion role and configuring it..."
 INSPECCION_ROLE_ID=$(moosh role-create -d "Los usuarios con rol de inspección tienen acceso a determinados informes" -a manager -n "Inspeccion" inspeccion)
@@ -214,6 +223,13 @@ while IFS=$'\t' read -r category_var shortname fullname visible
         COHORT=$(echo "${shortname}" | cut -d '-' -f 1,2)
         echo "****** Enrolling the cohort ${COHORT} into the course_id ${COURSE_ID}"
         moosh cohort-enrol -c "${COURSE_ID}" "${COHORT}"
+    fi
+
+    # Matricular al profesor CD DAW en todos los cursos de cd_daw
+    if [ "${category_var}" = "cd_daw" ] && [ -n "${PROF_CD_DAW_USER_ID}" ];
+    then
+        echo "****** Enrolling professor prof_cd_daw (ID=${PROF_CD_DAW_USER_ID}) into course_id ${COURSE_ID} with role editingteacher"
+        moosh course-enrol -r editingteacher -i "${COURSE_ID}" "${PROF_CD_DAW_USER_ID}"
     fi
 
     # Matricular a jefes de estudios en los cursos en base al ID centro del shortname
