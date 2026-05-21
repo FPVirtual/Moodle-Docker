@@ -1,0 +1,130 @@
+{
+  "generated_at": "2026-05-18T12:24:02.754891",
+  "moodle_url": "https://redestel.fpvirtualaragon.es",
+  "centers": [
+    {
+      "center_description": "50020125",
+      "center_name": "CAMPUS DIGITAL FP",
+      "center_id": 49,
+      "total_categories": 8,
+      "structure": [
+        {
+          "id": 51,
+          "name": "Administración de Sistemas Informáticos en Red",
+          "idnumber": "",
+          "description": "IFC301",
+          "descriptionformat": 1,
+          "visible": 1,
+          "depth": 2,
+          "path": "/49/51",
+          "coursecount": 24,
+          "timemodified": 1694434401
+        },
+        {
+          "id": 55,
+          "name": "Ciberseguridad en Entornos de las Tecnologías de la Información",
+          "idnumber": "",
+          "description": "CESIFC01",
+          "descriptionformat": 1,
+          "visible": 1,
+          "depth": 2,
+          "path": "/49/55",
+          "coursecount": 7,
+          "timemodified": 1694434402
+        },
+        {
+          "id": 71,
+          "name": "Desarrollo de Aplicaciones en Lenguaje Python",
+          "idnumber": "",
+          "description": "<p dir=\"ltr\" style=\"text-align:left;\">CESIFC05",
+          "descriptionformat": 1,
+          "visible": 1,
+          "depth": 2,
+          "path": "/49/71",
+          "coursecount": 5,
+          "timemodified": 1757408476
+        },
+        {
+          "id": 52,
+          "name": "Desarrollo de Aplicaciones Multiplataforma",
+          "idnumber": "",
+          "description": "IFC302",
+          "descriptionformat": 1,
+          "visible": 1,
+          "depth": 2,
+          "path": "/49/52",
+          "coursecount": 24,
+          "timemodified": 1694434401
+        },
+        {
+          "id": 53,
+          "name": "Desarrollo de Aplicaciones WEB",
+          "idnumber": "",
+          "description": "IFC303",
+          "descriptionformat": 1,
+          "visible": 1,
+          "depth": 2,
+          "path": "/49/53",
+          "coursecount": 23,
+          "timemodified": 1694434402
+        },
+        {
+          "id": 54,
+          "name": "Inteligencia Artificial y Big Data",
+          "idnumber": "",
+          "description": "CESIFC02",
+          "descriptionformat": 1,
+          "visible": 1,
+          "depth": 2,
+          "path": "/49/54",
+          "coursecount": 6,
+          "timemodified": 1694434402
+        },
+        {
+          "id": 72,
+          "name": "Recursos y Servicios en la Nube",
+          "idnumber": "",
+          "description": "<p dir=\"ltr\" style=\"text-align:left;\"><span>CESIFC04</span>",
+          "descriptionformat": 1,
+          "visible": 0,
+          "depth": 2,
+          "path": "/49/72",
+          "coursecount": 6,
+          "timemodified": 1757416123
+        },
+        {
+          "id": 50,
+          "name": "Sistemas Microinformáticos y Redes",
+          "idnumber": "",
+          "description": "IFC201",
+          "descriptionformat": 1,
+          "visible": 1,
+          "depth": 2,
+          "path": "/49/50",
+          "coursecount": 23,
+          "timemodified": 1694434401
+        }
+      ]
+    },
+    {
+      "center_description": "50008460",
+      "center_name": "IES LUIS BUÑUEL",
+      "center_id": 39,
+      "total_categories": 1,
+      "structure": [
+        {
+          "id": 40,
+          "name": "Atención a Personas en situación de Dependencia",
+          "idnumber": "",
+          "description": "SSC201",
+          "descriptionformat": 1,
+          "visible": 1,
+          "depth": 2,
+          "path": "/39/40",
+          "coursecount": 24,
+          "timemodified": 1694434398
+        }
+      ]
+    }
+  ]
+}

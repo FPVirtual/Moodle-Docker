@@ -4,3 +4,4 @@
 /init-scripts/mbzs/
 /init-scripts/moodle-code/
 /docker-compose.override.yml
+/Moodle-API-Test/.env
