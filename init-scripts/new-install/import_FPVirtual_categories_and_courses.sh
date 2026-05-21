@@ -26,13 +26,22 @@ echo >&2 "Importing categories and courses..."
 #############################################################################################
 echo "Creating users, roles,... of PFD"
 
-# Añadir admin2 (ya creado desde CSV) a siteadmins
-echo "Configurando admin2 como siteadmin..."
+# Añadir usuarios admin (creados desde CSV) a siteadmins
+echo "Configurando usuarios admin como siteadmin..."
 FPD_ADMIN_USER_ID=$(moosh sql-run "SELECT id FROM mdl_user WHERE username='admin2'" | grep -oP '\d+' | head -1)
-if [ -n "$FPD_ADMIN_USER_ID" ]; then
-    moosh config-set siteadmins 2,"${FPD_ADMIN_USER_ID}"
-else
-    echo >&2 "WARNING: admin2 no encontrado, omitiendo siteadmins"
+MOODLE_API_USER_ID=$(moosh sql-run "SELECT id FROM mdl_user WHERE username='moodle-api'" | grep -oP '\d+' | head -1)
+
+SITEADMINS="2"
+[ -n "$FPD_ADMIN_USER_ID" ] && SITEADMINS="${SITEADMINS},${FPD_ADMIN_USER_ID}"
+[ -n "$MOODLE_API_USER_ID" ] && SITEADMINS="${SITEADMINS},${MOODLE_API_USER_ID}"
+
+moosh config-set siteadmins "${SITEADMINS}"
+
+if [ -z "$FPD_ADMIN_USER_ID" ]; then
+    echo >&2 "WARNING: admin2 no encontrado, omitiendo de siteadmins"
+fi
+if [ -z "$MOODLE_API_USER_ID" ]; then
+    echo >&2 "WARNING: moodle-api no encontrado, omitiendo de siteadmins"
 fi
 
 # Buscar ID del profesor de CD DAW (creado desde CSV)

@@ -6,7 +6,9 @@ FILES="/init-scripts/${INSTALL_TYPE}/moodle.sh
 /init-scripts/${INSTALL_TYPE}/plugins.sh
 /init-scripts/${INSTALL_TYPE}/load_usuarios.sh
 /init-scripts/${INSTALL_TYPE}/import_FPVirtual_categories_and_courses.sh
-/init-scripts/${INSTALL_TYPE}/theme.sh"
+/init-scripts/${INSTALL_TYPE}/theme.sh
+/init-scripts/${INSTALL_TYPE}/api_config.sh"
+
 
 for f in $FILES
 do
