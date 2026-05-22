@@ -28,8 +28,8 @@ echo "Creating users, roles,... of PFD"
 
 # Añadir usuarios admin (creados desde CSV) a siteadmins
 echo "Configurando usuarios admin como siteadmin..."
-FPD_ADMIN_USER_ID=$(moosh -n sql-run "SELECT id FROM mdl_user WHERE username='admin2'" | grep -oP '\d+' | head -1)
-MOODLE_API_USER_ID=$(moosh -n sql-run "SELECT id FROM mdl_user WHERE username='moodle-api'" | grep -oP '\d+' | head -1)
+FPD_ADMIN_USER_ID=$(moosh -n sql-run "SELECT id FROM mdl_user WHERE username='admin2'" | awk '/\[id\] =>/ {print $3}')
+MOODLE_API_USER_ID=$(moosh -n sql-run "SELECT id FROM mdl_user WHERE username='moodle-api'" | awk '/\[id\] =>/ {print $3}')
 
 SITEADMINS="2"
 [ -n "$FPD_ADMIN_USER_ID" ] && SITEADMINS="${SITEADMINS},${FPD_ADMIN_USER_ID}"
@@ -46,7 +46,7 @@ fi
 
 # Buscar ID del profesor de CD DAW (creado desde CSV)
 echo "Buscando profesor CD DAW..."
-PROF_CD_DAW_USER_ID=$(moosh -n sql-run "SELECT id FROM mdl_user WHERE username='prof_cd_daw'" | grep -oP '\d+' | head -1)
+PROF_CD_DAW_USER_ID=$(moosh -n sql-run "SELECT id FROM mdl_user WHERE username='prof_cd_daw'" | awk '/\[id\] =>/ {print $3}')
 if [ -n "$PROF_CD_DAW_USER_ID" ]; then
     echo "Profesor CD DAW encontrado: ID=${PROF_CD_DAW_USER_ID}"
 else
