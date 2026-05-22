@@ -16,6 +16,8 @@ El objetivo original de este estudio (eliminar la dependencia de `moodle-code/` 
 3. Copia scripts PHP custom desde `custom/`.
 4. Genera `config.php` automáticamente en runtime desde variables de entorno.
 
+> **Ampliación (2026-05-22)**: Los datos de inicialización (CSV de usuarios/cursos y backups `.mbz`) también se han externalizado de la imagen. Ahora residen en `./init-data/` y se montan como volumen en runtime, reduciendo drásticamente el tamaño de la imagen.
+
 ---
 
 ## 2. Arquitectura de build

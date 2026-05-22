@@ -258,6 +258,16 @@ Esto permite versionar los `.mbz` junto al código de inicialización en lugar d
 
 **Cambio**: El puerto de publicación del host ya no está hardcodeado a `8087`. Ahora se controla mediante la variable `MOODLE_HOST_PORT` en `.env` (valor por defecto `8080`).
 
+### 6.6. Centralización de datos de inicialización en `/init-data`
+
+**Problema**: Los archivos CSV de usuarios/cursos y los backups `.mbz` (2,9 GB) estaban dentro de `init-scripts/`, por lo que se copiaban en la imagen Docker durante el build. Esto inflaba innecesariamente el tamaño de la imagen.
+
+**Solución**: Se creó el directorio `./init-data/` en la raíz del proyecto con dos subdirectorios:
+- `./init-data/data/` → CSV de usuarios, jefaturas, categorías, cohortes y cursos (`read_csv.php`).
+- `./init-data/mbzs/` → Backups `.mbz` para restauración de cursos.
+
+`docker-compose.yml` monta `./init-data:/init-data:ro` como volumen de solo lectura. Los scripts de inicialización leen desde `/init-data/data/` y `/init-data/mbzs/` en runtime, sin necesidad de empaquetarlos en la imagen.
+
 ---
 
 ## 7. Trabajo pendiente y riesgos conocidos

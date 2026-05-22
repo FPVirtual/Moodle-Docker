@@ -13,11 +13,12 @@ El proyecto es un despliegue **Docker Compose** de Moodle 4.5.11, preparado para
 | **Servicios Docker** | `redis` (caché/sesiones) y `moodle` (imagen propia basada en `php:8.2-apache`). | Se eliminó el contenedor `web` (nginx) y PHP-FPM. Apache con mod_php simplifica el stack y reduce latencia. |
 | **Código fuente** | Moodle core descargado desde GitHub releases durante el build. Plugins clonados dinámicamente desde `plugins.json`. | Ya no se copia `moodle-code/` del host. La imagen es 100% autocontenida. |
 | **Datos de Moodle** | Carpeta `./moodle-data/` montada como volumen. | Generación propia para nuevas instalaciones. En migraciones puede montarse datos existentes. |
+| **Datos de inicialización** | Carpeta `./init-data/` montada como volumen de solo lectura. | Contiene `data/` (CSV de usuarios, cursos, categorías, cohortes, jefaturas) y `mbzs/` (backups `.mbz` para restauración de cursos). Externaliza ~2,9 GB de la imagen Docker. |
 | **Base de datos** | **MariaDB externa** (10.11.16 o superior), conectada vía red Docker `moodle_network`. | No se usa el perfil `with-db` en producción. Para desarrollo/testing se puede levantar con `--profile with-db`. |
 | **Proxy inverso** | Red externa `moodle_network`, gestionada por proxy inverso externo (nginx-proxy, Traefik, etc.). | El contenedor `moodle` expone puerto `8080:80` en el host. |
 | **Configuraciones** | `./apache-conf/000-default.conf`, `./php-conf/` (opcache, uploads, desactivación de APCu). | Se eliminó `nginx/` y `fpm-conf/`. Apache gestiona PHP directamente vía mod_php. |
 | **Inicialización** | `./init-scripts/` con lógica de primer arranque (`new-install`) y actualizaciones (`upgrade`). | `plugins.json` + variables `PLUGIN_*` controlan qué plugins se instalan. Todos los comandos `moosh` usan flag `-n` para evitar warnings de propietario. |
-| **Gestión de usuarios** | CSV en `init-scripts/new-install/data/usuarios.csv` + `load_usuarios.sh`. | Reemplaza la creación hardcodeada de usuarios en `moodle.sh` e `import_FPD_categories_and_courses.sh`. |
+| **Gestión de usuarios** | CSV en `./init-data/data/usuarios.csv` + `load_usuarios.sh`. | Reemplaza la creación hardcodeada de usuarios en `moodle.sh` e `import_FPD_categories_and_courses.sh`. Los CSV se montan como volumen, no se copian en la imagen. |
 
 ### 1.2. Diagrama de red
 
