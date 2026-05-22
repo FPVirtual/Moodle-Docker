@@ -62,20 +62,7 @@
       "git_branch": "main",
       "default_enabled": true,
       "has_postinstall_actions": true
-    },
-    {
-      "name": "block_configurable_reports",
-      "component": "block_configurable_reports",
-      "description": "Generador de informes SQL y graficos (DEPRECADO por Moodle HQ).",
-      "category": "reporting",
-      "moodle_path": "blocks/configurable_reports",
-      "install_method": "moosh",
-      "git_url": "https://github.com/jleyva/moodle-block_configurablereports.git",
-      "git_branch": "MOODLE_4x_STABLE",
-      "default_enabled": false,
-      "has_postinstall_actions": true,
-      "warning": "DEPRECADO. Open LMS retira soporte en julio 2026. Evaluar alternativa antes de habilitar."
-    },
+    },    
     {
       "name": "report_coursestats_v2",
       "component": "report_coursestats_v2",

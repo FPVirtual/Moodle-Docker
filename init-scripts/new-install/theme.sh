@@ -3,15 +3,15 @@
 
 echo "Configuring theme..."
 
-moosh config-set theme moove
+moosh -n config-set theme moove
 
 # FPD specific theme configuration
 echo "... for FPD..."
 cp /init-scripts/themes/fpdist/moove*tar.gz /var/www/html/
-moosh theme-settings-import --targettheme moove moove*tar.gz
+moosh -n theme-settings-import --targettheme moove moove*tar.gz
 
 # Forzar configuraciones que no se comportan bien en la importación
-moosh config-set displaymarketingbox 1 theme_moove
+moosh -n config-set displaymarketingbox 1 theme_moove
 
 # Copiar imágenes, logos y plantillas
 cp -R /init-scripts/themes/fpdist/style /var/www/html/theme/moove
@@ -22,7 +22,7 @@ cp /init-scripts/themes/fpdist/frontpage.mustache /var/www/html/theme/moove/temp
 cp /init-scripts/themes/fpdist/politica-privacidad.php /var/www/html/politica-privacidad.php
 
 # Configurar página principal
-moosh config-set frontpage none
+moosh -n config-set frontpage none
 
 # Soporte
 mkdir -p /var/www/html/soporte/
@@ -34,7 +34,7 @@ mkdir -p /var/www/html/faqs/
 cp -R /init-scripts/themes/fpdist/faqs /var/www/html/faqs
 
 # SCSS personalizado
-moosh config-set scss "
+moosh -n config-set scss "
 input[value|='CC'] {
     display: none !important;
 }

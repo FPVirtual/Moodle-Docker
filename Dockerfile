@@ -22,6 +22,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libmemcached-dev \
     git \
     jq \
+    python3 \
     unzip \
     curl \
     vim \

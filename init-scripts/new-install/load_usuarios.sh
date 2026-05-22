@@ -26,7 +26,7 @@ while IFS=$'\t' read -r username password_env email firstname lastname role; do
     fi
 
     echo "Creando usuario: $username"
-    moosh user-create --password "$password" --email "$email" --digest 2 --city "Aragón" --country ES --firstname "$firstname" --lastname "$lastname" "$username"
+    moosh -n user-create --password "$password" --email "$email" --digest 2 --city "Aragón" --country ES --firstname "$firstname" --lastname "$lastname" "$username"
 done < <(php "${DATA_DIR}/read_csv.php" "$CSV_FILE")
 
 echo >&2 "Usuarios creados."

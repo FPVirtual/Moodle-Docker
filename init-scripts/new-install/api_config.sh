@@ -1,6 +1,6 @@
 #!/bin/bash
 # =============================================================================
-# Script de configuración del API Web Service de Moodle usando moosh
+# Script de configuración del API Web Service de Moodle usando moosh -n
 # =============================================================================
 # Usuario: moodle-api (ya existe con permisos de admin)
 # Servicio: Test API
@@ -10,7 +10,7 @@
 set -e  # Salir si algún comando falla
 
 echo "=========================================="
-echo "Configuración API Moodle con moosh"
+echo "Configuración API Moodle con moosh -n"
 echo "=========================================="
 echo ""
 
@@ -32,21 +32,21 @@ if [ ! -f "config.php" ]; then
     exit 1
 fi
 
-echo "[1/8] Verificando instalación de moosh..."
-if ! command -v moosh &> /dev/null; then
-    echo "ERROR: moosh no está instalado. Instálalo primero:"
-    echo "  sudo apt-get install moosh"
-    echo "  o visita https://moosh-online.com/"
+echo "[1/8] Verificando instalación de moosh -n..."
+if ! command -v moosh -n &> /dev/null; then
+    echo "ERROR: moosh -n no está instalado. Instálalo primero:"
+    echo "  sudo apt-get install moosh -n"
+    echo "  o visita https://moosh -n-online.com/"
     exit 1
 fi
-echo "  ✓ moosh detectado"
+echo "  ✓ moosh -n detectado"
 
 # -----------------------------------------------------------------------------
 # 2. HABILITAR WEB SERVICES A NIVEL DE SITIO
 # -----------------------------------------------------------------------------
 echo ""
 echo "[2/8] Habilitando servicios web..."
-moosh config-set enablewebservices 1
+moosh -n config-set enablewebservices 1
 echo "  ✓ enablewebservices = 1"
 
 # -----------------------------------------------------------------------------
@@ -55,7 +55,7 @@ echo "  ✓ enablewebservices = 1"
 echo ""
 echo "[3/8] Habilitando protocolo REST..."
 # Activar REST (habilitar el plugin)
-moosh plugin-install webservice_rest 2>/dev/null || echo "  REST ya está disponible"
+moosh -n plugin-install webservice_rest 2>/dev/null || echo "  REST ya está disponible"
 
 # -----------------------------------------------------------------------------
 # 4. CREAR ROL DE INTEGRACIÓN API
@@ -64,22 +64,22 @@ echo ""
 echo "[4/8] Creando rol de integración API..."
 
 # Verificar si el rol ya existe
-ROLE_EXISTS=$(moosh role-list | grep "$API_ROLE" | wc -l)
+ROLE_EXISTS=$(moosh -n role-list | grep "$API_ROLE" | wc -l)
 
 if [ "$ROLE_EXISTS" -eq "0" ]; then
-    moosh role-create -d "Rol para acceso programático vía web services"                       -a user                       -n "Integración API"                       "$API_ROLE"
+    moosh -n role-create -d "Rol para acceso programático vía web services"                       -a user                       -n "Integración API"                       "$API_ROLE"
     echo "  ✓ Rol '$API_ROLE' creado"
 else
     echo "  ✓ Rol '$API_ROLE' ya existe"
 fi
 
 # -----------------------------------------------------------------------------
-# 5. ASIGNAR CAPACIDADES AL ROL (vía SQL con moosh)
+# 5. ASIGNAR CAPACIDADES AL ROL (vía SQL con moosh -n)
 # -----------------------------------------------------------------------------
 echo ""
 echo "[5/8] Asignando capacidades al rol..."
 
-ROLE_ID=$(moosh sql-run "SELECT id FROM {role} WHERE shortname = '$API_ROLE'" | grep -oP '\d+' | tail -1)
+ROLE_ID=$(moosh -n sql-run "SELECT id FROM {role} WHERE shortname = '$API_ROLE'" | grep -oP '\d+' | tail -1)
 
 capabilities=(
     # Usuarios
@@ -119,7 +119,7 @@ capabilities=(
 )
 
 for cap in "${capabilities[@]}"; do
-    moosh sql-run "INSERT INTO {role_capabilities} (roleid, contextid, capability, permission, timemodified, modifierid) 
+    moosh -n sql-run "INSERT INTO {role_capabilities} (roleid, contextid, capability, permission, timemodified, modifierid) 
                    VALUES ($ROLE_ID, 1, '$cap', 1, $(date +%s), 2)
                    ON DUPLICATE KEY UPDATE permission = 1, timemodified = $(date +%s)" > /dev/null 2>&1
 done
@@ -132,14 +132,14 @@ echo "  ✓ ${#capabilities[@]} capacidades asignadas"
 echo ""
 echo "[6/8] Asignando rol a usuario '$API_USER'..."
 
-USER_ID=$(moosh sql-run "SELECT id FROM {user} WHERE username = '$API_USER'" | grep -oP '\d+' | tail -1)
+USER_ID=$(moosh -n sql-run "SELECT id FROM {user} WHERE username = '$API_USER'" | grep -oP '\d+' | tail -1)
 
 if [ -z "$USER_ID" ]; then
     echo "ERROR: Usuario '$API_USER' no encontrado. Crea el usuario primero."
     exit 1
 fi
 
-moosh sql-run "INSERT INTO {role_assignments} (roleid, contextid, userid, timemodified, modifierid, component, itemid)
+moosh -n sql-run "INSERT INTO {role_assignments} (roleid, contextid, userid, timemodified, modifierid, component, itemid)
                VALUES ($ROLE_ID, 1, $USER_ID, $(date +%s), 2, '', 0)
                ON DUPLICATE KEY UPDATE roleid = $ROLE_ID, timemodified = $(date +%s)" > /dev/null 2>&1
 
@@ -152,23 +152,23 @@ echo ""
 echo "[7/8] Creando servicio externo '$SERVICE_NAME'..."
 
 # Crear servicio
-moosh sql-run "INSERT INTO {external_services} (name, shortname, enabled, requiredcapability, restrictedusers, 
+moosh -n sql-run "INSERT INTO {external_services} (name, shortname, enabled, requiredcapability, restrictedusers, 
                component, timecreated, timemodified, downloadfiles, uploadfiles)
                VALUES ('$SERVICE_NAME', '$SERVICE_SHORTNAME', 1, 'moodle/user:create', 1, 
                '', $(date +%s), $(date +%s), 1, 1)
                ON DUPLICATE KEY UPDATE enabled = 1, restrictedusers = 1, downloadfiles = 1, uploadfiles = 1" > /dev/null 2>&1
 
-SERVICE_ID=$(moosh sql-run "SELECT id FROM {external_services} WHERE shortname = '$SERVICE_SHORTNAME'" | grep -oP '\d+' | tail -1)
+SERVICE_ID=$(moosh -n sql-run "SELECT id FROM {external_services} WHERE shortname = '$SERVICE_SHORTNAME'" | grep -oP '\d+' | tail -1)
 
 # Autorizar usuario al servicio
-moosh sql-run "INSERT INTO {external_services_users} (externalserviceid, userid, iprestriction, validuntil, 
+moosh -n sql-run "INSERT INTO {external_services_users} (externalserviceid, userid, iprestriction, validuntil, 
                timecreated, timemodified, creatorid)
                VALUES ($SERVICE_ID, $USER_ID, '', 0, $(date +%s), $(date +%s), 2)
                ON DUPLICATE KEY UPDATE timecreated = $(date +%s), timemodified = $(date +%s)" > /dev/null 2>&1
 
 # Generar token
 TOKEN=$(openssl rand -hex 16)
-moosh sql-run "INSERT INTO {external_tokens} (token, privatetoken, tokentype, userid, externalserviceid, 
+moosh -n sql-run "INSERT INTO {external_tokens} (token, privatetoken, tokentype, userid, externalserviceid, 
                sid, contextid, creatorid, iprestriction, validuntil, timecreated, lastaccess, name)
                VALUES ('$TOKEN', MD5(CONCAT('private_', $(date +%s))), 0, $USER_ID, $SERVICE_ID, 
                '', 1, 2, '', 0, $(date +%s), 0, 'Token $SERVICE_NAME')
@@ -248,7 +248,7 @@ functions=(
 )
 
 for func in "${functions[@]}"; do
-    moosh sql-run "INSERT INTO {external_services_functions} (functionname, externalserviceid)
+    moosh -n sql-run "INSERT INTO {external_services_functions} (functionname, externalserviceid)
                    VALUES ('$func', $SERVICE_ID)
                    ON DUPLICATE KEY UPDATE externalserviceid = $SERVICE_ID" > /dev/null 2>&1
 done
@@ -260,7 +260,7 @@ echo "  ✓ ${#functions[@]} funciones añadidas"
 # -----------------------------------------------------------------------------
 echo ""
 echo "[9/9] Limpiando cachés..."
-moosh cache-clear
+moosh -n cache-clear
 echo "  ✓ Caché limpiada"
 
 # -----------------------------------------------------------------------------

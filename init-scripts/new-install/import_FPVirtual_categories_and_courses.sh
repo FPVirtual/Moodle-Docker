@@ -28,14 +28,14 @@ echo "Creating users, roles,... of PFD"
 
 # Añadir usuarios admin (creados desde CSV) a siteadmins
 echo "Configurando usuarios admin como siteadmin..."
-FPD_ADMIN_USER_ID=$(moosh sql-run "SELECT id FROM mdl_user WHERE username='admin2'" | grep -oP '\d+' | head -1)
-MOODLE_API_USER_ID=$(moosh sql-run "SELECT id FROM mdl_user WHERE username='moodle-api'" | grep -oP '\d+' | head -1)
+FPD_ADMIN_USER_ID=$(moosh -n sql-run "SELECT id FROM mdl_user WHERE username='admin2'" | grep -oP '\d+' | head -1)
+MOODLE_API_USER_ID=$(moosh -n sql-run "SELECT id FROM mdl_user WHERE username='moodle-api'" | grep -oP '\d+' | head -1)
 
 SITEADMINS="2"
 [ -n "$FPD_ADMIN_USER_ID" ] && SITEADMINS="${SITEADMINS},${FPD_ADMIN_USER_ID}"
 [ -n "$MOODLE_API_USER_ID" ] && SITEADMINS="${SITEADMINS},${MOODLE_API_USER_ID}"
 
-moosh config-set siteadmins "${SITEADMINS}"
+moosh -n config-set siteadmins "${SITEADMINS}"
 
 if [ -z "$FPD_ADMIN_USER_ID" ]; then
     echo >&2 "WARNING: admin2 no encontrado, omitiendo de siteadmins"
@@ -46,7 +46,7 @@ fi
 
 # Buscar ID del profesor de CD DAW (creado desde CSV)
 echo "Buscando profesor CD DAW..."
-PROF_CD_DAW_USER_ID=$(moosh sql-run "SELECT id FROM mdl_user WHERE username='prof_cd_daw'" | grep -oP '\d+' | head -1)
+PROF_CD_DAW_USER_ID=$(moosh -n sql-run "SELECT id FROM mdl_user WHERE username='prof_cd_daw'" | grep -oP '\d+' | head -1)
 if [ -n "$PROF_CD_DAW_USER_ID" ]; then
     echo "Profesor CD DAW encontrado: ID=${PROF_CD_DAW_USER_ID}"
 else
@@ -55,20 +55,20 @@ fi
 
 # Crear rol de inspección
 echo "Creating inspeccion role and configuring it..."
-INSPECCION_ROLE_ID=$(moosh role-create -d "Los usuarios con rol de inspección tienen acceso a determinados informes" -a manager -n "Inspeccion" inspeccion | tail -1)
+INSPECCION_ROLE_ID=$(moosh -n role-create -d "Los usuarios con rol de inspección tienen acceso a determinados informes" -a manager -n "Inspeccion" inspeccion | tail -1)
 
 # set permissions to inspeccion role
-moosh role-import -f /init-scripts/themes/fpdist/roles/role-inspeccion.xml
+moosh -n role-import -f /init-scripts/themes/fpdist/roles/role-inspeccion.xml
 
 # Asignar rol inspeccion a profinspector (ya creado desde CSV)
-moosh user-assign-system-role profinspector inspeccion
+moosh -n user-assign-system-role profinspector inspeccion
 
 # Crear rol de jefaturas y usuarios
 echo "Creating jefatura-estudios role and configuring it..."
-JEFATURA_ROLE_ID=$(moosh role-create -d "Los usuarios con rol de inspección tienen acceso a determinados informes" -c system,category,course,block -n "Jefatura de estudios" jefatura-estudios | tail -1)
+JEFATURA_ROLE_ID=$(moosh -n role-create -d "Los usuarios con rol de inspección tienen acceso a determinados informes" -c system,category,course,block -n "Jefatura de estudios" jefatura-estudios | tail -1)
 
 # Setting permissions to jefatura de estudios role
-moosh role-import -f /init-scripts/themes/fpdist/roles/role-jefatura-estudios.xml
+moosh -n role-import -f /init-scripts/themes/fpdist/roles/role-jefatura-estudios.xml
 
 # Creating jefatura users from CSV
 echo "Creating jefatura users from CSV..."
@@ -77,7 +77,7 @@ while IFS=$'\t' read -r username password_env email firstname lastname cod_centr
     echo "Creating jefatura user: ${username}"
     suffix=$(echo "${username}" | sed 's/prof_je_//')
     var_name="JE_${suffix^^}_USER_ID"
-    eval "${var_name}=\$(moosh user-create --password \"\${${password_env}}\" --email \"${email}\" --digest 2 --city Aragón --country ES --firstname \"${firstname}\" --lastname \"${lastname}\" ${username})"
+    eval "${var_name}=\$(moosh -n user-create --password \"\${${password_env}}\" --email \"${email}\" --digest 2 --city Aragón --country ES --firstname \"${firstname}\" --lastname \"${lastname}\" ${username})"
 done < <(php "${DATA_DIR}/read_csv.php" "${DATA_DIR}/jefaturas.csv")
 
 #############################################################################################
@@ -99,7 +99,7 @@ while IFS=$'\t' read -r var_name parent visible description name
     fi
 
     echo "Creating category: ${name} (var=${var_name}, parent=${parent})"
-    eval "ID_CATEGORY_${var_name}=\$(moosh category-create -p \"\${parent_id}\" -v \"\${visible}\" -d \"\${description}\" \"\${name}\" | grep -oP '\\d+' | tail -1)"
+    eval "ID_CATEGORY_${var_name}=\$(moosh -n category-create -p \"\${parent_id}\" -v \"\${visible}\" -d \"\${description}\" \"\${name}\" | grep -oP '\\d+' | tail -1)"
 done < <(php "${DATA_DIR}/read_csv.php" "${DATA_DIR}/categorias.csv")
 
 #############################################################################################
@@ -109,7 +109,7 @@ done < <(php "${DATA_DIR}/read_csv.php" "${DATA_DIR}/categorias.csv")
 # Añadir el campo personalizado a los usuarios y asignar a cada jefe de estudios el suyo 
 echo "Creating custom fields for jefatura estudios..."
 # # Creo el campo personalizado
-moosh userprofilefields-import /init-scripts/themes/fpdist/custom-fields/user_profile_fields.csv
+moosh -n userprofilefields-import /init-scripts/themes/fpdist/custom-fields/user_profile_fields.csv
 
 # # Asignar a cada usuario el valor que le corresponde en el campo personalizado
 while IFS=$'\t' read -r username password_env email firstname lastname cod_centro category_var
@@ -118,7 +118,7 @@ while IFS=$'\t' read -r username password_env email firstname lastname cod_centr
     user_var="JE_${suffix^^}_USER_ID"
     eval "user_id=\${${user_var}}"
     eval "cat_id=\${ID_CATEGORY_${category_var}}"
-    moosh sql-run "INSERT INTO mdl_user_info_data (userid, fieldid, data, dataformat) values (${user_id}, 1, ${cat_id}, 0)"
+    moosh -n sql-run "INSERT INTO mdl_user_info_data (userid, fieldid, data, dataformat) values (${user_id}, 1, ${cat_id}, 0)"
 done < <(php "${DATA_DIR}/read_csv.php" "${DATA_DIR}/jefaturas.csv")
 
 
@@ -130,7 +130,7 @@ echo "Creating cohorts from CSV..."
 while IFS=$'\t' read -r description id category_var name
  do
     eval "cat_id=\${ID_CATEGORY_${category_var}}"
-    moosh cohort-create -d "${description}" -i "${id}" -c "${cat_id}" "${name}"
+    moosh -n cohort-create -d "${description}" -i "${id}" -c "${cat_id}" "${name}"
 done < <(php "${DATA_DIR}/read_csv.php" "${DATA_DIR}/cohortes.csv")
 
 #############################################################################################
@@ -143,7 +143,7 @@ while IFS=$'\t' read -r username password_env email firstname lastname cod_centr
     suffix=$(echo "${username}" | sed 's/prof_je_//')
     user_var="JE_${suffix^^}_USER_ID"
     eval "user_id=\${${user_var}}"
-    moosh cohort-enrol -u "${user_id}" "jefaturas"
+    moosh -n cohort-enrol -u "${user_id}" "jefaturas"
 done < <(php "${DATA_DIR}/read_csv.php" "${DATA_DIR}/jefaturas.csv")
 
 
@@ -168,20 +168,20 @@ while IFS=$'\t' read -r category_var shortname fullname visible
     echo "CATEGORY '${category_var}' -> '${CATEGORY}' - SHORTNAME '${shortname}' - FULLNAME '${fullname}' - VISIBLE '${visible}'"
     COURSE_ID=""
     
-    if [ ! -f "/var/www/moodledata/repository/mbzs_curso_anterior/${shortname}.mbz" ]; then
+    if [ ! -f "/init-scripts/mbz/${shortname}.mbz" ]; then
         # Si no existe el curso, lo creo
-        echo "***** The course /var/www/moodledata/repository/mbzs_curso_anterior/${shortname}.mbz doesn't exist, creating empty course ${shortname} into category ${CATEGORY}"
-        COURSE_ID=$(moosh course-create --category "${CATEGORY}" --fullname "${fullname}" --description "${fullname}" "${shortname}" | grep -oP '\d+' | tail -1)
+        echo "***** The course /init-scripts/mbz/${shortname}.mbz doesn't exist, creating empty course ${shortname} into category ${CATEGORY}"
+        COURSE_ID=$(moosh -n course-create --category "${CATEGORY}" --fullname "${fullname}" --description "${fullname}" "${shortname}" | grep -oP '\d+' | tail -1)
     else
         # Si existe el curso lo restauro
-        echo "***** Restoring /var/www/moodledata/repository/mbzs_curso_anterior/${shortname}.mbz course to category ${CATEGORY}"
-        COURSE_ID=$(moosh course-restore /var/www/moodledata/repository/mbzs_curso_anterior/${shortname}.mbz "${CATEGORY}")
+        echo "***** Restoring /init-scripts/mbz/${shortname}.mbz course to category ${CATEGORY}"
+        COURSE_ID=$(moosh -n course-restore /init-scripts/mbz/${shortname}.mbz "${CATEGORY}")
         COURSE_ID=$(echo "${COURSE_ID}" | tail -n 1 | cut -d ':' -f 2 | cut -d ' ' -f 2)
         # Configuro full y short names por si al restaurar había datos erróneos en origen
-        moosh course-config-set course "${COURSE_ID}" shortname "${shortname}"
-        moosh course-config-set course "${COURSE_ID}" fullname "${fullname}"
+        moosh -n course-config-set course "${COURSE_ID}" shortname "${shortname}"
+        moosh -n course-config-set course "${COURSE_ID}" fullname "${fullname}"
     fi
-    moosh course-config-set course "${COURSE_ID}" visible "${visible}"
+    moosh -n course-config-set course "${COURSE_ID}" visible "${visible}"
     # TODO: valorar si los que no son visible los borro una vez creados <- verificar no afecta a los IDs
 
     # matriculo en el curso de ayuda a las cohortes alumnado, profesorado, coordinacion y jefaturas
@@ -189,10 +189,10 @@ while IFS=$'\t' read -r category_var shortname fullname visible
     then
         COHORT=$(echo "${shortname}" | cut -d '-' -f 1,2)
         echo "****** Enrolling the cohorts alumnado, profesorado, coordinacion and jefaturas into the course_id ${COURSE_ID}"
-        moosh cohort-enrol -c "${COURSE_ID}" "alumnado"
-        moosh cohort-enrol -c "${COURSE_ID}" "profesorado"
-        moosh cohort-enrol -c "${COURSE_ID}" "coordinacion"
-        moosh cohort-enrol -c "${COURSE_ID}" "jefaturas"
+        moosh -n cohort-enrol -c "${COURSE_ID}" "alumnado"
+        moosh -n cohort-enrol -c "${COURSE_ID}" "profesorado"
+        moosh -n cohort-enrol -c "${COURSE_ID}" "coordinacion"
+        moosh -n cohort-enrol -c "${COURSE_ID}" "jefaturas"
     fi
 
     # matriculo en el curso de profesorado a las cohortes profesorado, coordinacion y jefaturas
@@ -200,9 +200,9 @@ while IFS=$'\t' read -r category_var shortname fullname visible
     then
         COHORT=$(echo "${shortname}" | cut -d '-' -f 1,2)
         echo "****** Enrolling the cohorts profesorado, coordinacion and jefaturas into the course_id ${COURSE_ID}"
-        moosh cohort-enrol -c "${COURSE_ID}" "profesorado"
-        moosh cohort-enrol -c "${COURSE_ID}" "coordinacion"
-        moosh cohort-enrol -c "${COURSE_ID}" "jefaturas"
+        moosh -n cohort-enrol -c "${COURSE_ID}" "profesorado"
+        moosh -n cohort-enrol -c "${COURSE_ID}" "coordinacion"
+        moosh -n cohort-enrol -c "${COURSE_ID}" "jefaturas"
     fi
 
     # matriculo en el curso de coordinacion a las cohortes coordinacion y jefaturas
@@ -210,8 +210,8 @@ while IFS=$'\t' read -r category_var shortname fullname visible
     then
         COHORT=$(echo "${shortname}" | cut -d '-' -f 1,2)
         echo "****** Enrolling the cohorts coordinacion and jefaturas into the course_id ${COURSE_ID}"
-        moosh cohort-enrol -c "${COURSE_ID}" "coordinacion"
-        moosh cohort-enrol -c "${COURSE_ID}" "jefaturas"
+        moosh -n cohort-enrol -c "${COURSE_ID}" "coordinacion"
+        moosh -n cohort-enrol -c "${COURSE_ID}" "jefaturas"
     fi
 
     # matriculo en el curso de marketplaces a los usuarios que nos piden desde la app
@@ -219,11 +219,11 @@ while IFS=$'\t' read -r category_var shortname fullname visible
     then
         COHORT=$(echo "${shortname}" | cut -d '-' -f 1,2)
         echo "****** Creating and enrolling the users for marketplaces into the course_id ${COURSE_ID}"
-        FPD_APP_USER_STUDENT_ID=$(moosh user-create --password "${APP_PASSWORD}" --email alumnado@education.catedu.es --digest 2 --city Aragón --country ES --firstname student --lastname demoapp demoapp)
-        FPD_APP_USER_TEACHER_ID=$(moosh user-create --password "${APP_TEACHER_PASSWORD}" --email alumnado@education.catedu.es --digest 2 --city Aragón --country ES --firstname teacher --lastname demoapp profesor1)
+        FPD_APP_USER_STUDENT_ID=$(moosh -n user-create --password "${APP_PASSWORD}" --email alumnado@education.catedu.es --digest 2 --city Aragón --country ES --firstname student --lastname demoapp demoapp)
+        FPD_APP_USER_TEACHER_ID=$(moosh -n user-create --password "${APP_TEACHER_PASSWORD}" --email alumnado@education.catedu.es --digest 2 --city Aragón --country ES --firstname teacher --lastname demoapp profesor1)
 
-        moosh course-enrol -r editingteacher -i "${COURSE_ID}" "${FPD_APP_USER_TEACHER_ID}"
-        moosh course-enrol -r student -i "${COURSE_ID}" "${FPD_APP_USER_STUDENT_ID}"
+        moosh -n course-enrol -r editingteacher -i "${COURSE_ID}" "${FPD_APP_USER_TEACHER_ID}"
+        moosh -n course-enrol -r student -i "${COURSE_ID}" "${FPD_APP_USER_STUDENT_ID}"
     fi
 
     # si el cod_ensenanza contiene una t al final (es una tutoría) entonces matriculo a la cohorte en ese curso
@@ -231,14 +231,14 @@ while IFS=$'\t' read -r category_var shortname fullname visible
     then
         COHORT=$(echo "${shortname}" | cut -d '-' -f 1,2)
         echo "****** Enrolling the cohort ${COHORT} into the course_id ${COURSE_ID}"
-        moosh cohort-enrol -c "${COURSE_ID}" "${COHORT}"
+        moosh -n cohort-enrol -c "${COURSE_ID}" "${COHORT}"
     fi
 
     # Matricular al profesor CD DAW en todos los cursos de cd_daw
     if [ "${category_var}" = "cd_daw" ] && [ -n "${PROF_CD_DAW_USER_ID}" ];
     then
         echo "****** Enrolling professor prof_cd_daw (ID=${PROF_CD_DAW_USER_ID}) into course_id ${COURSE_ID} with role editingteacher"
-        moosh course-enrol -r editingteacher -i "${COURSE_ID}" "${PROF_CD_DAW_USER_ID}"
+        moosh -n course-enrol -r editingteacher -i "${COURSE_ID}" "${PROF_CD_DAW_USER_ID}"
     fi
 
     # Matricular a jefes de estudios en los cursos en base al ID centro del shortname
@@ -248,71 +248,71 @@ while IFS=$'\t' read -r category_var shortname fullname visible
         case "${CODCENTRO}" in
             "22002521") # IES Sierra de Guara
                 echo "****** Enrolling the user ${JE_SG_USER_ID} into the course_id ${COURSE_ID} with role jefatura-estudios"
-                moosh course-enrol -r jefatura-estudios -i "${COURSE_ID}" "${JE_SG_USER_ID}"
+                moosh -n course-enrol -r jefatura-estudios -i "${COURSE_ID}" "${JE_SG_USER_ID}"
                 ;;
             "44003211") # IES SANTA EMERENCIANA
                 echo "****** Enrolling the user ${JE_SE_USER_ID} into the course_id ${COURSE_ID} with role jefatura-estudios"
-                moosh course-enrol -r jefatura-estudios -i "${COURSE_ID}" "${JE_SE_USER_ID}"
+                moosh -n course-enrol -r jefatura-estudios -i "${COURSE_ID}" "${JE_SE_USER_ID}"
                 ;;
             "50010511") # IES TIEMPOS MODERNOS
                 echo "****** Enrolling the user ${JE_TM_USER_ID} into the course_id ${COURSE_ID} with role jefatura-estudios"
-                moosh course-enrol -r jefatura-estudios -i "${COURSE_ID}" "${JE_TM_USER_ID}"
+                moosh -n course-enrol -r jefatura-estudios -i "${COURSE_ID}" "${JE_TM_USER_ID}"
                 ;;
             "50010314") # CPIFP LOS ENLACES
                 echo "****** Enrolling the user ${JE_LE_USER_ID} into the course_id ${COURSE_ID} with role jefatura-estudios"
-                moosh course-enrol -r jefatura-estudios -i "${COURSE_ID}" "${JE_LE_USER_ID}"
+                moosh -n course-enrol -r jefatura-estudios -i "${COURSE_ID}" "${JE_LE_USER_ID}"
                 ;;
             "50018829") # CPIFP CORONA DE ARAGÓN
                 echo "****** Enrolling the user ${JE_CA_USER_ID} into the course_id ${COURSE_ID} with role jefatura-estudios"
-                moosh course-enrol -r jefatura-estudios -i "${COURSE_ID}" "${JE_CA_USER_ID}"
+                moosh -n course-enrol -r jefatura-estudios -i "${COURSE_ID}" "${JE_CA_USER_ID}"
                 ;;
             "22010712") # CPIFP PIRÁMIDE
                 echo "****** Enrolling the user ${JE_PI_USER_ID} into the course_id ${COURSE_ID} with role jefatura-estudios"
-                moosh course-enrol -r jefatura-estudios -i "${COURSE_ID}" "${JE_PI_USER_ID}"
+                moosh -n course-enrol -r jefatura-estudios -i "${COURSE_ID}" "${JE_PI_USER_ID}"
                 ;;
             "44003028") # CPIFP SAN BLAS
                 echo "****** Enrolling the user ${JE_SB_USER_ID} into the course_id ${COURSE_ID} with role jefatura-estudios"
-                moosh course-enrol -r jefatura-estudios -i "${COURSE_ID}" "${JE_SB_USER_ID}"
+                moosh -n course-enrol -r jefatura-estudios -i "${COURSE_ID}" "${JE_SB_USER_ID}"
                 ;;
             "50010156") # IES MIRALBUENO
                 echo "****** Enrolling the user ${JE_MI_USER_ID} into the course_id ${COURSE_ID} with role jefatura-estudios"
-                moosh course-enrol -r jefatura-estudios -i "${COURSE_ID}" "${JE_MI_USER_ID}"
+                moosh -n course-enrol -r jefatura-estudios -i "${COURSE_ID}" "${JE_MI_USER_ID}"
                 ;;
             "50010144") # IES PABLO SERRANO
                 echo "****** Enrolling the user ${JE_PS_USER_ID} into the course_id ${COURSE_ID} with role jefatura-estudios"
-                moosh course-enrol -r jefatura-estudios -i "${COURSE_ID}" "${JE_PS_USER_ID}"
+                moosh -n course-enrol -r jefatura-estudios -i "${COURSE_ID}" "${JE_PS_USER_ID}"
                 ;;
             "44010537") # CPIFP BAJO ARAGÓN
                 echo "****** Enrolling the user ${JE_BA_USER_ID} into the course_id ${COURSE_ID} with role jefatura-estudios"
-                moosh course-enrol -r jefatura-estudios -i "${COURSE_ID}" "${JE_BA_USER_ID}"
+                moosh -n course-enrol -r jefatura-estudios -i "${COURSE_ID}" "${JE_BA_USER_ID}"
                 ;;
             "50009567") # IES RÍO GÁLLEGO
                 echo "****** Enrolling the user ${JE_RG_USER_ID} into the course_id ${COURSE_ID} with role jefatura-estudios"
-                moosh course-enrol -r jefatura-estudios -i "${COURSE_ID}" "${JE_RG_USER_ID}"
+                moosh -n course-enrol -r jefatura-estudios -i "${COURSE_ID}" "${JE_RG_USER_ID}"
                 ;;
             "44003235") # IES VEGA DEL TURIA
                 echo "****** Enrolling the user ${JE_VT_USER_ID} into the course_id ${COURSE_ID} with role jefatura-estudios"
-                moosh course-enrol -r jefatura-estudios -i "${COURSE_ID}" "${JE_VT_USER_ID}"
+                moosh -n course-enrol -r jefatura-estudios -i "${COURSE_ID}" "${JE_VT_USER_ID}"
                 ;;
             "50008460") # IES LUIS BUÑUEL
                 echo "****** Enrolling the user ${JE_LB_USER_ID} into the course_id ${COURSE_ID} with role jefatura-estudios"
-                moosh course-enrol -r jefatura-estudios -i "${COURSE_ID}" "${JE_LB_USER_ID}"
+                moosh -n course-enrol -r jefatura-estudios -i "${COURSE_ID}" "${JE_LB_USER_ID}"
                 ;;
             "22002491") # CPIFP MONTEARAGON
                 echo "****** Enrolling the user ${JE_MO_USER_ID} into the course_id ${COURSE_ID} with role jefatura-estudios"
-                moosh course-enrol -r jefatura-estudios -i "${COURSE_ID}" "${JE_MO_USER_ID}"
+                moosh -n course-enrol -r jefatura-estudios -i "${COURSE_ID}" "${JE_MO_USER_ID}"
                 ;;
             "22004611") # IES MARTÍNEZ VARGAS
                 echo "****** Enrolling the user ${JE_MV_USER_ID} into the course_id ${COURSE_ID} with role jefatura-estudios"
-                moosh course-enrol -r jefatura-estudios -i "${COURSE_ID}" "${JE_MV_USER_ID}"
+                moosh -n course-enrol -r jefatura-estudios -i "${COURSE_ID}" "${JE_MV_USER_ID}"
                 ;;
             "50009348") # IES AVEMPACE
                 echo "****** Enrolling the user ${JE_AV_USER_ID} into the course_id ${COURSE_ID} with role jefatura-estudios"
-                moosh course-enrol -r jefatura-estudios -i "${COURSE_ID}" "${JE_AV_USER_ID}"
+                moosh -n course-enrol -r jefatura-estudios -i "${COURSE_ID}" "${JE_AV_USER_ID}"
                 ;;
             "50008642") # IES MARÍA MOLINER
                 echo "****** Enrolling the user ${JE_MM_USER_ID} into the course_id ${COURSE_ID} with role jefatura-estudios"
-                moosh course-enrol -r jefatura-estudios -i "${COURSE_ID}" "${JE_MM_USER_ID}"
+                moosh -n course-enrol -r jefatura-estudios -i "${COURSE_ID}" "${JE_MM_USER_ID}"
                 ;;
         esac
     fi

@@ -78,7 +78,7 @@ services:
       - fpvirtual-internal
       - moodle_network
     ports:
-      - "8087:80"
+      - "${MOODLE_HOST_PORT:-8080}:80"
     logging:
       driver: "json-file"
       options:

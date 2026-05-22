@@ -16,68 +16,68 @@ actions_asociated_to_plugin(){
     case ${1} in
         "local_mail")
             echo "Configuring local_mail..."
-            moosh config-set maxfiles 5 local_mail
-            moosh config-set maxbytes 2097152 local_mail
-            moosh config-set enablebackup 1 local_mail
+            moosh -n config-set maxfiles 5 local_mail
+            moosh -n config-set maxbytes 2097152 local_mail
+            moosh -n config-set enablebackup 1 local_mail
             echo "Updating default notification preferences for local_mail"
-            moosh config-set  message_provider_local_mail_mail_loggedin    popup   message
-            moosh config-set  message_provider_local_mail_mail_loggedoff    popup   message
+            moosh -n config-set  message_provider_local_mail_mail_loggedin    popup   message
+            moosh -n config-set  message_provider_local_mail_mail_loggedoff    popup   message
             ;;
         "mod_jitsi")
             echo "Configuring jitsi..."
-            moosh config-set jitsi_livebutton 1
-            moosh config-set jitsi_shareyoutube 1
-            moosh config-set jitsi_id nameandsurname
-            moosh config-set jitsi_finishandreturn 1
-            moosh config-set jitsi_sesionname 0,1,2
-            moosh config-set jitsi_domain meet.jit.si
-            moosh config-set jitsi_watermarklink https://jitsi.org
-            moosh config-set jitsi_channellastcam 4
+            moosh -n config-set jitsi_livebutton 1
+            moosh -n config-set jitsi_shareyoutube 1
+            moosh -n config-set jitsi_id nameandsurname
+            moosh -n config-set jitsi_finishandreturn 1
+            moosh -n config-set jitsi_sesionname 0,1,2
+            moosh -n config-set jitsi_domain meet.jit.si
+            moosh -n config-set jitsi_watermarklink https://jitsi.org
+            moosh -n config-set jitsi_channellastcam 4
             ;;
         "block_grade_me")
             echo "Configuring block_grade_me..."
-            moosh config-set block_grade_me_maxcourses 10
-            moosh config-set block_grade_me_enableassign 1
-            moosh config-set block_grade_me_enableassignment 1
-            moosh config-set block_grade_me_enablequiz 1
+            moosh -n config-set block_grade_me_maxcourses 10
+            moosh -n config-set block_grade_me_enableassign 1
+            moosh -n config-set block_grade_me_enableassignment 1
+            moosh -n config-set block_grade_me_enablequiz 1
             ;;
         "format_tiles")
             echo "Configuring format_tiles..."
-            moosh config-set modalresources pdf,url,html format_tiles
-            moosh config-set showprogresssphototiles 0 format_tiles
-            moosh config-set showseczerocoursewide 1 format_tiles
-            moosh config-set allowphototiles 1 format_tiles
+            moosh -n config-set modalresources pdf,url,html format_tiles
+            moosh -n config-set showprogresssphototiles 0 format_tiles
+            moosh -n config-set showseczerocoursewide 1 format_tiles
+            moosh -n config-set allowphototiles 1 format_tiles
             moosh -n config-set usejavascriptnav 0 format_tiles
             ;;
         "block_xp")
             echo "Configuring block_xp..."
-            moosh config-set blocktitle "¡Sube de nivel!" block_xp
+            moosh -n config-set blocktitle "¡Sube de nivel!" block_xp
             ;;
         "mod_pdfannotator")
             echo "Configuring mod_pdfannotator..."
-            moosh config-set usevotes 1 mod_pdfannotator
+            moosh -n config-set usevotes 1 mod_pdfannotator
             ;;
         "mod_board")
-            moosh config-set new_column_icon fa-plus mod_board
-            moosh config-set new_note_icon fa-plus mod_board
-            moosh config-set media_selection 1 mod_board
-            moosh config-set post_max_length 250 mod_board
-            moosh config-set history_refresh 60 mod_board
+            moosh -n config-set new_column_icon fa-plus mod_board
+            moosh -n config-set new_note_icon fa-plus mod_board
+            moosh -n config-set media_selection 1 mod_board
+            moosh -n config-set post_max_length 250 mod_board
+            moosh -n config-set history_refresh 60 mod_board
             ;;
         "block_configurable_reports")
             echo "Configuring configurable_reports..."
-            moosh config-set cron_hour 1 block_configurable_reports
-            moosh config-set cron_minute 15 block_configurable_reports
-            moosh config-set crrepository jleyva/moodle-configurable_reports_repository block_configurable_reports
-            moosh config-set dbhost ${MOODLE_DB_HOST} block_configurable_reports
-            moosh config-set dbname ${MOODLE_DB_NAME} block_configurable_reports
-            moosh config-set dbuser ${MOODLE_DB_USER} block_configurable_reports
-            moosh config-set dbpass ${MOODLE_DB_PASSWORD} block_configurable_reports
-            moosh config-set reportlimit 5000 block_configurable_reports
-            moosh config-set reporttableui datatables block_configurable_reports
-            moosh config-set sharedsqlrepository jleyva/moodle-custom_sql_report_queries block_configurable_reports
-            moosh config-set sqlsecurity 1 block_configurable_reports
-            moosh config-set sqlsyntaxhighlight 1 block_configurable_reports
+            moosh -n config-set cron_hour 1 block_configurable_reports
+            moosh -n config-set cron_minute 15 block_configurable_reports
+            moosh -n config-set crrepository jleyva/moodle-configurable_reports_repository block_configurable_reports
+            moosh -n config-set dbhost ${MOODLE_DB_HOST} block_configurable_reports
+            moosh -n config-set dbname ${MOODLE_DB_NAME} block_configurable_reports
+            moosh -n config-set dbuser ${MOODLE_DB_USER} block_configurable_reports
+            moosh -n config-set dbpass ${MOODLE_DB_PASSWORD} block_configurable_reports
+            moosh -n config-set reportlimit 5000 block_configurable_reports
+            moosh -n config-set reporttableui datatables block_configurable_reports
+            moosh -n config-set sharedsqlrepository jleyva/moodle-custom_sql_report_queries block_configurable_reports
+            moosh -n config-set sqlsecurity 1 block_configurable_reports
+            moosh -n config-set sqlsyntaxhighlight 1 block_configurable_reports
             ;;
         *)
             echo "No additional actions for plugin ${1}"
@@ -91,7 +91,7 @@ actions_asociated_to_plugin(){
 ####################
 
 echo >&2 "Downloading plugin list..."
-moosh plugin-list >/dev/null
+moosh -n plugin-list >/dev/null
 echo >&2 "Plugin list downloaded!"
 
 echo >&2 "Installing plugins..."
@@ -109,10 +109,10 @@ while IFS= read -r PLUGIN; do
     echo ""
     echo "===> Processing plugin: ${PLUGIN}"
 
-    # Instalar via moosh si esta disponible para esta version
-    if moosh plugin-list | grep "^${PLUGIN} " | grep "${VERSION_MINOR}" >/dev/null; then
+    # Instalar via moosh -n si esta disponible para esta version
+    if moosh -n plugin-list | grep "^${PLUGIN} " | grep "${VERSION_MINOR}" >/dev/null; then
         echo "trying to install ${PLUGIN} ..."
-        moosh plugin-install -d ${PLUGIN} || echo "${PLUGIN} already present or install skipped"
+        moosh -n plugin-install -d ${PLUGIN} || echo "${PLUGIN} already present or install skipped"
     else
         echo "${PLUGIN} is not available in remote list for ${VERSION_MINOR}, checking local..."
     fi
@@ -127,7 +127,7 @@ echo >&2 "Plugins installed!"
 # Solo configuramos Atto si al menos uno de los plugins de Atto esta habilitado
 if plugin_is_enabled "atto_fontsize" || plugin_is_enabled "atto_fontfamily" || plugin_is_enabled "atto_fullscreen" || plugin_is_enabled "atto_c4l"; then
     echo "Configuring editor_atto..."
-    moosh config-set toolbar "collapse = collapse
+    moosh -n config-set toolbar "collapse = collapse
 style1 = title, fontsize, fontfamily, fontcolor, backcolor, bold, italic
 list = unorderedlist, orderedlist
 links = link
@@ -144,7 +144,7 @@ fi
 
 if plugin_is_enabled "atto_fontfamily"; then
     echo "Configuring atto_fontfamily..."
-    moosh config-set fontselectlist "Arial=Arial, Helvetica, sans-serif;
+    moosh -n config-set fontselectlist "Arial=Arial, Helvetica, sans-serif;
 Times=Times New Roman, Times, serif;
 Courier=Courier New, Courier, mono;
 Georgia=Georgia, Times New Roman, Times, serif;

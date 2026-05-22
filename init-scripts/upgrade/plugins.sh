@@ -8,7 +8,7 @@ source "${SCRIPT_DIR}/../lib/plugins-lib.sh"
 
 # GET PLUGIN LIST
 echo >&2 "Downloading plugin list..."
-moosh plugin-list >/dev/null
+moosh -n plugin-list >/dev/null
 echo >&2 "Plugin list downloaded!"
 
 # INSTALL PLUGINS
@@ -23,7 +23,7 @@ plugins_show_summary
 while IFS= read -r PLUGIN; do
     [ -z "$PLUGIN" ] && continue
     echo "===> Upgrading/Reinstalling plugin: ${PLUGIN}"
-    moosh plugin-install -d ${PLUGIN} || echo "${PLUGIN} skipped or already present"
+    moosh -n plugin-install -d ${PLUGIN} || echo "${PLUGIN} skipped or already present"
 done < <(plugins_list_enabled)
 
 echo >&2 "Plugins installed!"

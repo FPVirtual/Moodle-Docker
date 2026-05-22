@@ -4,7 +4,7 @@
 # =============================================================================
 # Uso: source /init-scripts/lib/plugins-lib.sh
 #
-# Dependencias: python3 (disponible en la imagen php:8.1-fpm de Debian)
+# Dependencias: python3 (disponible en la imagen php:8.2-apache de Debian)
 # =============================================================================
 
 PLUGINS_JSON="${PLUGINS_JSON:-/init-scripts/plugins.json}"
