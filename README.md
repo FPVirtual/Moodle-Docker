@@ -11,8 +11,10 @@ Este proyecto es una versión modernizada y autocontenida del despliegue de Mood
 | Código Moodle | Bind mount (`./moodle-code`) o copiado del host | Descargado desde GitHub releases durante el build |
 | Plugins | Hardcoded en Dockerfile o copiados | Catálogo `plugins.json` + `docker-clone-plugins.sh` |
 | Datos (`moodle-data`) | Bind mount | **Mantiene bind mount** para facilitar backups |
-| Gestión usuarios | Hardcodeado en scripts | CSV `usuarios.csv` + `load_usuarios.sh` |
+| Datos de inicialización | Dentro de `init-scripts/` (copiados en imagen) | Volumen `./init-data/` (CSV + backups `.mbz`) fuera de la imagen |
+| Gestión usuarios | Hardcodeado en scripts | CSV en `./init-data/data/` + `load_usuarios.sh` |
 | Scripts init | Genéricos para varios tipos de centro | **Específicos para FPD** (simplificados) |
+| Puerto host | Hardcodeado a `8087` | Parametrizado via `MOODLE_HOST_PORT` (default `8080`) |
 
 ## Estructura
 
@@ -37,13 +39,14 @@ new-moodle/
 │   │   ├── plugins.sh                  # Instalación de plugins desde plugins.json
 │   │   ├── theme.sh                    # Tema Moove personalizado FPD
 │   │   ├── import_FPD_categories_and_courses.sh
-│   │   ├── load_usuarios.sh            # Carga usuarios desde CSV
-│   │   └── data/
-│   │       └── usuarios.csv            # Usuarios iniciales
+│   │   └── load_usuarios.sh            # Carga usuarios desde CSV
 │   └── upgrade/
 │       ├── moodle.sh
 │       ├── plugins.sh
 │       └── theme.sh
+├── init-data/                          # Datos de inicialización (volumen montado)
+│   ├── data/                           # CSV de usuarios, cursos, categorías, cohortes, jefaturas
+│   └── mbzs/                           # Backups .mbz para restauración de cursos
 ├── custom/                             # Scripts PHP custom (copiados a /var/www/html)
 │   ├── decalogo/
 │   ├── faqs/
@@ -130,6 +133,8 @@ La primera vez que arranca:
 3. Ejecuta `init-scripts/init.sh`, que lanza `moodle.sh`, `plugins.sh`, `theme.sh`, `import_FPD_categories_and_courses.sh` y `load_usuarios.sh`.
 4. Se crea el archivo `/var/www/moodledata/.moodle-installed` para no repetir la instalación en reinicios.
 
+> **Nota sobre `init-data/`**: Antes del primer arranque, asegúrate de que exista `./init-data/data/` (con los CSV) y, si tienes backups, `./init-data/mbzs/` (con los archivos `.mbz`). Estos directorios se montan como volumen de solo lectura; no se empaquetan en la imagen Docker.
+
 ## Plugins de terceros
 
 Los plugins se definen en `plugins.json` y se clonan durante el build de la imagen.
@@ -175,7 +180,8 @@ Genera en `./backups/`:
 ## Notas
 
 - `moodle-data` se mantiene como **carpeta local** para facilitar backups y acceso directo.
+- `init-data` también es una **carpeta local** montada como volumen; contiene CSV y backups `.mbz` (no se incluyen en la imagen).
 - El código de Moodle va **dentro de la imagen Docker** (despliegue reproducible). Para desarrollo se puede montar desde el host.
 - La base de datos puede ser el contenedor **MariaDB incluido** (perfil `with-db`) o una instancia **externa** ya existente.
 - Los scripts de inicialización van dentro de la imagen para garantizar reproducibilidad.
-- Apache escucha en el puerto 80 del contenedor, mapeado a `8080` en el host.
+- Apache escucha en el puerto 80 del contenedor. El puerto del host se define en `.env` mediante `MOODLE_HOST_PORT` (por defecto `8080`).
