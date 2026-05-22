@@ -2,6 +2,8 @@
 /moodle-data/
 /moodle-code/
 /init-scripts/mbzs/
+/mbzs/
 /init-scripts/moodle-code/
 /docker-compose.override.yml
 /Moodle-API-Test/.env
+.env

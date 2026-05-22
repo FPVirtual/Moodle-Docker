@@ -72,6 +72,7 @@ services:
       BLACKBOARD_SECRET: "${BLACKBOARD_SECRET}"
     volumes:
       - ./moodle-data:/var/www/moodledata
+      - ./mbzs:/var/www/moodledata/mbzs:ro
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
     networks:
