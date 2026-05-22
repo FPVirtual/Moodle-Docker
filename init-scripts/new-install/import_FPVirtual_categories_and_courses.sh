@@ -168,14 +168,14 @@ while IFS=$'\t' read -r category_var shortname fullname visible
     echo "CATEGORY '${category_var}' -> '${CATEGORY}' - SHORTNAME '${shortname}' - FULLNAME '${fullname}' - VISIBLE '${visible}'"
     COURSE_ID=""
     
-    if [ ! -f "/init-scripts/mbz/${shortname}.mbz" ]; then
+    if [ ! -f "/init-scripts/mbzs/${shortname}.mbz" ]; then
         # Si no existe el curso, lo creo
-        echo "***** The course /init-scripts/mbz/${shortname}.mbz doesn't exist, creating empty course ${shortname} into category ${CATEGORY}"
+        echo "***** The course /init-scripts/mbzs/${shortname}.mbz doesn't exist, creating empty course ${shortname} into category ${CATEGORY}"
         COURSE_ID=$(moosh -n course-create --category "${CATEGORY}" --fullname "${fullname}" --description "${fullname}" "${shortname}" | grep -oP '\d+' | tail -1)
     else
         # Si existe el curso lo restauro
-        echo "***** Restoring /init-scripts/mbz/${shortname}.mbz course to category ${CATEGORY}"
-        COURSE_ID=$(moosh -n course-restore /init-scripts/mbz/${shortname}.mbz "${CATEGORY}")
+        echo "***** Restoring /init-scripts/mbzs/${shortname}.mbz course to category ${CATEGORY}"
+        COURSE_ID=$(moosh -n course-restore /init-scripts/mbzs/${shortname}.mbz "${CATEGORY}")
         COURSE_ID=$(echo "${COURSE_ID}" | tail -n 1 | cut -d ':' -f 2 | cut -d ' ' -f 2)
         # Configuro full y short names por si al restaurar había datos erróneos en origen
         moosh -n course-config-set course "${COURSE_ID}" shortname "${shortname}"
