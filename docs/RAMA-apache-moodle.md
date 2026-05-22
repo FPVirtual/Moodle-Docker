@@ -141,9 +141,10 @@ Refactorizado para:
 
 ### 4.8. `docker-compose.yml`
 
-- Puerto `8080:80` en servicio `moodle`.
+- Puerto parametrizado `${MOODLE_HOST_PORT:-8080}:80` en servicio `moodle` (antes era `8087:80` hardcodeado).
 - Eliminado `web` y `phpsocket`.
 - Red externa `moodle_network`.
+- Añadida variable `MOODLE_HOST_PORT` a `.env.example` para controlar el puerto de publicación en el host.
 
 ---
 
@@ -221,30 +222,68 @@ Una vez que el contenedor esté estable (`apache2-foreground` corriendo sin erro
 
 ---
 
-## 6. Trabajo pendiente y riesgos conocidos
+## 6. Cambios realizados durante la sesión de despliegue (2026-05-22)
 
-### 6.1. Plugin `local_educaaragon`
+### 6.1. `Dockerfile` — inclusión de `python3`
+
+**Problema**: `plugins-lib.sh` usaba `python3` para leer `plugins.json`, pero la imagen base `php:8.2-apache` no lo incluye. Esto provocaba que `plugins.sh` fallara silenciosamente, por lo que **ningún plugin se instalaba** (incluyendo `theme_moove`), dejando Moodle con el tema `boost` por defecto.
+
+**Solución**: Añadido `python3` a la lista de paquetes de `apt-get install` en el `Dockerfile`.
+
+### 6.2. Scripts de inicialización — flag `-n` en `moosh`
+
+**Problema**: Todos los scripts de `init-scripts/` ejecutan `moosh` como `root` (el entrypoint del contenedor corre como root), pero los directorios de `moodledata` pertenecen a `www-data`. Moosh lanzaba el warning:
+> "One of your Moodle data directories is owned by different user (www-data) than the one that runs the script (root)."
+
+**Solución**: Añadido el flag `-n` a **todos** los comandos `moosh` en los scripts de `new-install/` y `upgrade/` para saltar la comprobación de propietario.
+
+### 6.3. Ruta de archivos `.mbz` para restauración de cursos
+
+**Cambio**: En `import_FPVirtual_categories_and_courses.sh`, la ruta de búsqueda de backups `.mbz` cambió de:
+```
+/var/www/moodledata/repository/mbzs_curso_anterior/
+```
+a:
+```
+/init-scripts/mbz/
+```
+
+Esto permite versionar los `.mbz` junto al código de inicialización en lugar de depender de la carpeta de datos de Moodle.
+
+### 6.4. Eliminación de plugin deprecado del catálogo
+
+**Cambio**: Eliminado `block_configurable_reports` de `plugins.json`. Aunque ya estaba deshabilitado por defecto, su repositorio en GitHub generaba errores de TLS durante el build (`GnuTLS handshake failed`). Al eliminarlo del JSON, el build es más estable.
+
+### 6.5. Puerto host parametrizado
+
+**Cambio**: El puerto de publicación del host ya no está hardcodeado a `8087`. Ahora se controla mediante la variable `MOODLE_HOST_PORT` en `.env` (valor por defecto `8080`).
+
+---
+
+## 7. Trabajo pendiente y riesgos conocidos
+
+### 7.1. Plugin `local_educaaragon`
 
 Plugin interno de Aragón sin repositorio público conocido. No está en `plugins.json`.
 Si es necesario, copiar manualmente a `custom/local_educaaragon/` o añadir al Dockerfile.
 
-### 6.2. Compatibilidad PHP 8.2
+### 7.2. Compatibilidad PHP 8.2
 
 Moodle 4.5 soporta PHP 8.1-8.3. PHP 8.2 es el recomendado.
 Algunos plugins más antiguos podrían emitir warnings de deprecación. Verificar logs de Apache.
 
-### 6.3. Theme assets en instalación limpia
+### 7.3. Theme assets en instalación limpia
 
 El `moodle-data/filedir/` contiene hashes de archivos del tema (logos, banners).
 En instalación completamente limpia, estos archivos no existen.
 Se extrajeron 19 hashes del contenedor anterior para preservar assets visuales.
 
-### 6.4. Tiempo de build
+### 7.4. Tiempo de build
 
 Clonar ~23 repositorios git durante el build puede tardar 5-15 minutos.
 Mitigación: `--depth 1`, cache de capas Docker.
 
-### 6.5. Clean database setup
+### 7.5. Clean database setup
 
 Para una instalación limpia con Moodle 4.5.11:
 1. Asegurar que la BD esté vacía (drop/create database).
@@ -254,7 +293,7 @@ Para una instalación limpia con Moodle 4.5.11:
 
 ---
 
-## 7. Decisiones de diseño
+## 8. Decisiones de diseño
 
 | Decisión | Justificación |
 |----------|---------------|
@@ -267,7 +306,7 @@ Para una instalación limpia con Moodle 4.5.11:
 
 ---
 
-## 8. Relación con otros documentos
+## 9. Relación con otros documentos
 
 | Documento | Rol |
 |-----------|-----|
@@ -280,7 +319,7 @@ Para una instalación limpia con Moodle 4.5.11:
 
 ---
 
-## 9. Contacto y mantenimiento
+## 10. Contacto y mantenimiento
 
 - Si se detecta que un plugin no clona o no es compatible, actualizar `plugins.json`.
 - Para añadir un nuevo plugin: incluir en `plugins.json`, añadir `PLUGIN_<NOMBRE>` a `.env.example`, y añadir acciones post-instalación a `plugins.sh` si es necesario.

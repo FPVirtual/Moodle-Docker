@@ -127,7 +127,7 @@ En Moodle 4.5.x esa opción **no existe**; el script muestra `Unrecognised optio
 
 1. **Deshabilitar plugins obsoletos**:
    - `report_coursestats_v2` (`default_enabled: false` ya está bien)
-   - `block_configurable_reports` (deprecado por Open LMS, retiro julio 2026)
+   - ~~`block_configurable_reports`~~ (**Eliminado del catálogo en 2026-05-22**. Deprecado por Open LMS con retiro julio 2026; además generaba errores TLS durante el build de imagen.)
    - `atto_*` (Atto está deprecado; valorar migrar a TinyMCE equivalents)
 
 2. **Validar `format_tiles` en cursos reales**:

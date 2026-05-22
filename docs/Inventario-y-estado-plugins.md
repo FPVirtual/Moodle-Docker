@@ -13,7 +13,7 @@
 |--------|----------|-------------|
 | ✅ Activo / Con soporte | 15 | Plugin con releases recientes (< 1 año) y mantenedor responsive. |
 | ⚠️ Poco activo / En riesgo | 5 | Última release > 1 año, mantenedor incierto o transición tecnológica pendiente. |
-| 🔴 Obsoleto / Deprecado | 3 | Sin soporte oficial, riesgo alto de incompatibilidad en upgrades. |
+| 🔴 Obsoleto / Deprecado | 2 | Sin soporte oficial, riesgo alto de incompatibilidad en upgrades. |
 
 > **Recomendación prioritaria**: Revisar `block_configurable_reports` (deprecado julio 2026), `report_coursestats` (sin actualizaciones desde 2020) y migrar plugins Atto a TinyMCE en futuros upgrades mayores.
 
@@ -45,7 +45,7 @@
 
 | Plugin | Tipo | Mantenedor | Estado | Rama git | Observaciones |
 |--------|------|------------|--------|----------|---------------|
-| `block_configurable_reports` | Bloque | Juan Leyva / Lesterhuis | 🔴 Deprecado | `MOODLE_4x_STABLE` | Open LMS anunció fin de soporte julio 2026. **Deshabilitado por defecto.** Evaluar `report_customsql` o `tool_reportbuilder` (core 4.0+). |
+| ~~`block_configurable_reports`~~ | ~~Bloque~~ | ~~Juan Leyva / Lesterhuis~~ | ~~🔴 Deprecado~~ | ~~`MOODLE_4x_STABLE`~~ | **Eliminado del catálogo en 2026-05-22.** Open LMS anunció fin de soporte julio 2026. Además generaba errores TLS (`GnuTLS handshake failed`) durante el build. Si se necesita en el futuro, evaluar `report_customsql` o `tool_reportbuilder` (core 4.0+). |
 | `report_coursestats` | Informe | DIRED-UFLA | 🔴 Obsoleto | `main` | Sin actualizaciones desde 2020. Funcionalidad limitada. **Deshabilitado por defecto.** |
 
 ### 2.5. Cuestionarios y evaluación
