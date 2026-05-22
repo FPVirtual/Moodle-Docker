@@ -4,7 +4,7 @@
 
 set -e
 
-DATA_DIR="$(cd "$(dirname "$0")" && pwd)/data"
+DATA_DIR="/init-data/data"
 CSV_FILE="${1:-${DATA_DIR}/usuarios.csv}"
 
 if [ ! -f "$CSV_FILE" ]; then
