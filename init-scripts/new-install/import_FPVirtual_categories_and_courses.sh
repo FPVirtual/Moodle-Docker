@@ -169,18 +169,31 @@ while IFS=$'\t' read -r category_var shortname fullname visible
     COURSE_ID=""
     
     if [ ! -f "/init-data/mbzs/${shortname}.mbz" ]; then
-        # Si no existe el curso, lo creo
+        # Si no existe el curso, lo creo (o busco el existente si ya está creado)
         echo "***** The course /init-data/mbzs/${shortname}.mbz doesn't exist, creating empty course ${shortname} into category ${CATEGORY}"
-        COURSE_ID=$(moosh -n course-create --category "${CATEGORY}" --fullname "${fullname}" --description "${fullname}" "${shortname}" | grep -oP '\d+' | tail -1)
+        moosh -n course-create --category "${CATEGORY}" --fullname "${fullname}" --description "${fullname}" "${shortname}" >/dev/null 2>&1 || true
     else
         # Si existe el curso lo restauro
         echo "***** Restoring /init-data/mbzs/${shortname}.mbz course to category ${CATEGORY}"
-        COURSE_ID=$(moosh -n course-restore /init-data/mbzs/${shortname}.mbz "${CATEGORY}")
-        COURSE_ID=$(echo "${COURSE_ID}" | tail -n 1 | cut -d ':' -f 2 | cut -d ' ' -f 2)
-        # Configuro full y short names por si al restaurar había datos erróneos en origen
-        moosh -n course-config-set course "${COURSE_ID}" shortname "${shortname}"
-        moosh -n course-config-set course "${COURSE_ID}" fullname "${fullname}"
+        RESTORE_OUTPUT=$(moosh -n course-restore /init-data/mbzs/${shortname}.mbz "${CATEGORY}" 2>&1)
+        echo "${RESTORE_OUTPUT}"
+        # Si el restore falló (ej. curso ya existe), buscamos el ID por shortname
+        if ! echo "${RESTORE_OUTPUT}" | grep -q "courseid="; then
+            echo "***** course-restore did not return a new courseid. Looking up existing course by shortname..."
+        fi
     fi
+    
+    # Obtener el ID del curso por shortname (funciona tanto si se creó, restauró o ya existía)
+    COURSE_ID=$(moosh -n sql-run "SELECT id FROM mdl_course WHERE shortname='${shortname}'" | awk '/\[id\] =>/ {print $3}')
+    
+    if [ -z "$COURSE_ID" ]; then
+        echo "***** ERROR: Could not find or create course '${shortname}'. Skipping enrolments."
+        continue
+    fi
+    
+    # Configurar nombres y visibilidad
+    moosh -n course-config-set course "${COURSE_ID}" shortname "${shortname}"
+    moosh -n course-config-set course "${COURSE_ID}" fullname "${fullname}"
     moosh -n course-config-set course "${COURSE_ID}" visible "${visible}"
     # TODO: valorar si los que no son visible los borro una vez creados <- verificar no afecta a los IDs
 
