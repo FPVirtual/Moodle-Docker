@@ -218,7 +218,7 @@ while IFS=$'\t' read -r category_var shortname fullname visible
     else
         # Si existe el curso lo restauro
         echo "***** Restoring /init-data/mbzs/${shortname}.mbz course to category ${CATEGORY}"
-        RESTORE_OUTPUT=$(moosh -n course-restore /init-data/mbzs/${shortname}.mbz "${CATEGORY}" 2>&1)
+        RESTORE_OUTPUT=$(moosh -n course-restore -i -p /init-scripts/lib/mbz-preprocess.php /init-data/mbzs/${shortname}.mbz "${CATEGORY}" 2>&1)
         echo "${RESTORE_OUTPUT}"
         # Si el restore falló (ej. curso ya existe), buscamos el ID por shortname
         if ! echo "${RESTORE_OUTPUT}" | grep -q "courseid="; then
