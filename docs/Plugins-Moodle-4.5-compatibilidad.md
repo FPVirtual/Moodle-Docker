@@ -1,6 +1,6 @@
 # Auditoría de plugins para Moodle 4.5.x
 
-> Fecha: 2026-05-18  
+> Fecha: 2026-05-25  
 > Moodle destino: 4.5.11 (php:8.2-apache)  
 > Objetivo: documentar problemas de compatibilidad detectados al migrar desde la pila anterior y proponer repos/ramas corregidas.
 
@@ -11,8 +11,8 @@
 | Estado | Cantidad |
 |--------|----------|
 | Plugins corregidos / actualizados en `plugins.json` | 3 |
-| Plugins compatibles sin cambios | 18 |
-| Plugins obsoletos / con advertencias | 3 |
+| Plugins compatibles sin cambios | 17 |
+| Plugins obsoletos / con advertencias | 2 |
 
 ---
 
@@ -77,7 +77,6 @@
 | `theme_moove` | willianmano/moodle-theme_moove | MOODLE_405_STABLE | — | — |
 | `block_xp` | FMCorz/moodle-block_xp | master | 2026042001 | 4.1 |
 | `availability_xp` | FMCorz/moodle-availability_xp | master | 2026042000 | muy bajo |
-| `block_configurable_reports` | jleyva/moodle-block_configurablereports | MOODLE_4x_STABLE | 2027050401 | 4.0 |
 | `quizaccess_onesession` | vadimonus/moodle-quizaccess_onesession | master | 2024032400 | 4.2 |
 | `mod_choicegroup` | ndunand/moodle-mod_choicegroup | master | 2026013100 | 4.3 |
 | `mod_board` | brickfield/moodle-mod_board | MOODLE_405_STABLE | — | — |
@@ -108,7 +107,7 @@ En Moodle 4.5.x esa opción **no existe**; el script muestra `Unrecognised optio
 
 **Corrección:** eliminar `--non-interactive` de la línea de `install_database.php`.
 
-### `import_FPD_categories_and_courses.sh` — parsing de IDs de Moosh
+### `import_FPVirtual_categories_and_courses.sh` — parsing de IDs de Moosh
 
 **Problema:** varios comandos Moosh devuelven texto descriptivo (ej. `"Created category X with id: 7."`) y el script almacenaba la cadena completa en lugar del número.
 
@@ -127,7 +126,6 @@ En Moodle 4.5.x esa opción **no existe**; el script muestra `Unrecognised optio
 
 1. **Deshabilitar plugins obsoletos**:
    - `report_coursestats_v2` (`default_enabled: false` ya está bien)
-   - ~~`block_configurable_reports`~~ (**Eliminado del catálogo en 2026-05-22**. Deprecado por Open LMS con retiro julio 2026; además generaba errores TLS durante el build de imagen.)
    - `atto_*` (Atto está deprecado; valorar migrar a TinyMCE equivalents)
 
 2. **Validar `format_tiles` en cursos reales**:
@@ -157,6 +155,34 @@ docker compose logs -f moodle
 
 ---
 
+## Problemas adicionales detectados y corregidos (2026-05-25)
+
+### `import_FPVirtual_categories_and_courses.sh` — creación/restauración de cursos duplicados
+
+**Síntoma:** `moosh course-create` fallaba con `shortnametaken` cuando un curso ya existía. El script parseaba el output con `grep -oP '\d+'` para extraer el ID, lo cual era frágil y devolvía IDs incorrectos o vacíos.
+
+**Corrección:**
+- `course-create` ya no parsea output; si falla por duplicado, se ignora el error.
+- El ID del curso se obtiene siempre vía `moosh sql-run "SELECT id FROM mdl_course WHERE shortname='...'"`.
+- `course-restore`: si no devuelve `courseid=`, se busca el curso existente por `shortname`.
+- Si no se encuentra el curso, se salta la matriculación y se continúa con el siguiente.
+
+### `import_FPVirtual_categories_and_courses.sh` — matriculación de jefaturas con ID inválido
+
+**Síntoma:** `moosh user-create` devolvía mensajes de error (ej. "Error escribiendo a la base de datos") cuando el usuario ya existía. Esa cadena se almacenaba en `JE_XX_USER_ID` y luego se pasaba a `course-enrol`, causando "Usuario no válido".
+
+**Corrección:**
+- Al crear jefaturas: si `user-create` no devuelve un número, se busca el ID por `username` con `sql-run`.
+- Al matricular: se valida que el ID sea numérico (`grep -qE '^[0-9]+$'`) antes de llamar `course-enrol`. Si no lo es, se muestra warning y se salta.
+
+### Healthcheck de MariaDB (`docker-compose.yml`)
+
+**Síntoma:** El healthcheck anterior usaba `mysqladmin ping` sin contraseña, generando warnings `Access denied for user root` cada 10 segundos.
+
+**Corrección:** Se reemplazó por `healthcheck.sh --connect --innodb_initialized`, script nativo de la imagen `mariadb:10.11.16` que gestiona autenticación correctamente.
+
+---
+
 ## Problema adicional detectado post-instalación (2026-05-18)
 
 ### `load_usuarios.sh` — separador de campos incorrecto
@@ -173,4 +199,4 @@ WARNING: prof_cd_daw no encontrado, no se matriculará en cursos cd_daw
 
 **Corrección:** cambiar `IFS=','` por `IFS=$'\t'` en el bucle `while read`.
 
-**Nota:** los usuarios `prof_je_*` (jefaturas de estudios) sí se crearon correctamente porque `import_FPD_categories_and_courses.sh` ya usaba `IFS=$'\t'`.
+**Nota:** los usuarios `prof_je_*` (jefaturas de estudios) sí se crearon correctamente porque `import_FPVirtual_categories_and_courses.sh` ya usaba `IFS=$'\t'`.

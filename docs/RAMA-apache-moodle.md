@@ -1,7 +1,8 @@
 # Rama `apache-moodle` — Documento de trabajo
 
 > Fecha de creación: 2026-05-15
-> Estado: En desarrollo / Testing
+> Última actualización: 2026-05-25
+> Estado: Estable / En mantenimiento
 > Rama Git: `apache-moodle` (creada desde `creacion_moodle-data_propio`)
 
 ---
@@ -42,7 +43,7 @@ Esta rama evoluciona el trabajo de `creacion_moodle-data_propio` (imagen autocon
 │  Imagen Docker (build)                                       │
 │  ──────────────────────────────────────────────────────────  │
 │  • Moodle 4.5.11 (descargado desde GitHub releases)          │
-│  • 23 plugins de terceros (clonados desde git vía            │
+│  • 22 plugins de terceros (clonados desde git vía            │
 │    plugins.json + docker-clone-plugins.sh)                   │
 │  • Scripts PHP custom (custom/decalogo, faqs, etc.)          │
 │  • init-scripts (new-install + upgrade)                      │
@@ -59,7 +60,7 @@ Esta rama evoluciona el trabajo de `creacion_moodle-data_propio` (imagen autocon
 │  3. init.sh ejecuta:                                         │
 │     • moodle.sh     → configura sitio, SMTP, idioma es       │
 │     • plugins.sh    → configura plugins habilitados          │
-│     • import_FPD... → crea categorías, cursos, usuarios      │
+│     • import_FPVirtual... → crea categorías, cursos, usuarios      │
 │     • theme.sh      → aplica tema Moove + assets FPD         │
 │  4. load_usuarios.sh → carga usuarios desde CSV              │
 │  5. moodle-data/ se genera automáticamente                   │
@@ -105,7 +106,7 @@ CMD ["apache2-foreground"]
 
 ### 4.3. `plugins.json` (nuevo archivo)
 
-Catálogo maestro de 23 plugins con:
+Catálogo maestro de 22 plugins con:
 - `name`, `component`, `description`, `category`
 - `git_url`, `git_branch`, `moodle_path`
 - `default_enabled` (true/false)
@@ -135,7 +136,7 @@ Refactorizado para:
 
 ### 4.7. `init-scripts/new-install/load_usuarios.sh` y `data/usuarios.csv`
 
-- Extraídos usuarios hardcodeados de `moodle.sh` e `import_FPD_categories_and_courses.sh`.
+- Extraídos usuarios hardcodeados de `moodle.sh` e `import_FPVirtual_categories_and_courses.sh`.
 - CSV con columnas: `username,password_env,email,firstname,lastname,role`.
 - Contraseñas resueltas desde variables de entorno.
 
@@ -245,10 +246,10 @@ Una vez que el contenedor esté estable (`apache2-foreground` corriendo sin erro
 ```
 a:
 ```
-/init-scripts/mbz/
+/init-data/mbzs/
 ```
 
-Esto permite versionar los `.mbz` junto al código de inicialización en lugar de depender de la carpeta de datos de Moodle.
+Esto externaliza los ~2,9 GB de backups del imagen Docker, montándose como volumen de solo lectura desde `./init-data/`. Los scripts de inicialización leen desde `/init-data/data/` (CSV) y `/init-data/mbzs/` (backups) en runtime.
 
 ### 6.4. Eliminación de plugin deprecado del catálogo
 
@@ -267,6 +268,30 @@ Esto permite versionar los `.mbz` junto al código de inicialización en lugar d
 - `./init-data/mbzs/` → Backups `.mbz` para restauración de cursos.
 
 `docker-compose.yml` monta `./init-data:/init-data:ro` como volumen de solo lectura. Los scripts de inicialización leen desde `/init-data/data/` y `/init-data/mbzs/` en runtime, sin necesidad de empaquetarlos en la imagen.
+
+### 6.7. Healthcheck de MariaDB con script nativo
+
+**Problema**: El healthcheck del servicio `db` usaba `mysqladmin ping` sin contraseña, generando warnings `Access denied for user root` cada 10 segundos en los logs.
+
+**Solución**: Se reemplazó por `healthcheck.sh --connect --innodb_initialized`, incluido en la imagen `mariadb:10.11.16`, que gestiona la autenticación correctamente.
+
+### 6.8. Robustez ante cursos duplicados
+
+**Problema**: `moosh course-create` fallaba con `shortnametaken` si el curso ya existía. El script extraía el ID del curso con `grep -oP '\d+'` del output de moosh, lo cual era frágil y podía devolver IDs incorrectos.
+
+**Solución**:
+- `course-create` ya no parsea output; si falla por duplicado, se ignora.
+- El ID del curso se obtiene siempre vía `moosh sql-run "SELECT id FROM mdl_course WHERE shortname='...'"`.
+- `course-restore`: si no devuelve un `courseid` válido, se busca el curso existente por `shortname`.
+- Si no se encuentra el curso, se salta la matriculación y se continúa con el siguiente.
+
+### 6.9. Validación de IDs de jefaturas antes de matricular
+
+**Problema**: `moosh user-create` devolvía mensajes de error (no numéricos) cuando el usuario ya existía. Esa cadena se almacenaba en variables como `JE_SG_USER_ID` y luego se pasaba a `course-enrol`, causando errores de "Usuario no válido".
+
+**Solución**:
+- Al crear jefaturas: si `user-create` no devuelve un número, se busca el ID por `username` con `sql-run`.
+- Al matricular: se valida que el ID sea numérico (`grep -qE '^[0-9]+$'`) antes de llamar `course-enrol`. Si no lo es, se muestra warning y se salta la matriculación.
 
 ---
 
@@ -290,7 +315,7 @@ Se extrajeron 19 hashes del contenedor anterior para preservar assets visuales.
 
 ### 7.4. Tiempo de build
 
-Clonar ~23 repositorios git durante el build puede tardar 5-15 minutos.
+Clonar ~22 repositorios git durante el build puede tardar 5-15 minutos.
 Mitigación: `--depth 1`, cache de capas Docker.
 
 ### 7.5. Clean database setup

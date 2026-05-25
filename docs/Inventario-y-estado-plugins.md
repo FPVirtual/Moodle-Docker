@@ -1,6 +1,6 @@
 # Inventario y estado de plugins — Moodle FPD
 
-> Fecha de elaboración: 2026-05-15
+> Fecha de elaboración: 2026-05-25
 > Moodle base: 4.5.11 (`php:8.2-apache`)
 > Catálogo: `plugins.json` (fuente única de verdad)
 > Objetivo: Documentar todos los plugins de terceros, su origen, estado de mantenimiento y riesgo.
@@ -11,11 +11,11 @@
 
 | Estado | Cantidad | Significado |
 |--------|----------|-------------|
-| ✅ Activo / Con soporte | 15 | Plugin con releases recientes (< 1 año) y mantenedor responsive. |
+| ✅ Activo / Con soporte | 16 | Plugin con releases recientes (< 1 año) y mantenedor responsive. |
 | ⚠️ Poco activo / En riesgo | 5 | Última release > 1 año, mantenedor incierto o transición tecnológica pendiente. |
-| 🔴 Obsoleto / Deprecado | 2 | Sin soporte oficial, riesgo alto de incompatibilidad en upgrades. |
+| 🔴 Obsoleto / Deprecado | 1 | Sin soporte oficial, riesgo alto de incompatibilidad en upgrades. |
 
-> **Recomendación prioritaria**: Revisar `block_configurable_reports` (deprecado julio 2026), `report_coursestats` (sin actualizaciones desde 2020) y migrar plugins Atto a TinyMCE en futuros upgrades mayores.
+> **Recomendación prioritaria**: `block_configurable_reports` fue eliminado del catálogo el 2026-05-22 (deprecado por Open LMS, errores TLS). Revisar `report_coursestats_v2` (sin actualizaciones desde 2020) y migrar plugins Atto a TinyMCE en futuros upgrades mayores.
 
 ---
 
@@ -108,8 +108,7 @@
 
 | Plugin | Riesgo | Acción recomendada |
 |--------|--------|-------------------|
-| `block_configurable_reports` | 🔴 Alto | Buscar alternativa antes de julio 2026. Opciones: `report_customsql`, `tool_reportbuilder` (core 4.0+). |
-| `report_coursestats` | 🔴 Alto | Reemplazar por consultas SQL propias o desactivar. Sin soporte desde 2020. |
+| `report_coursestats_v2` | 🔴 Alto | Reemplazar por consultas SQL propias o desactivar. Sin soporte desde 2020. |
 | `quizaccess_onesession` | 🟡 Medio | Verificar compatibilidad. Plugin simple, probablemente funcione. |
 | `atto_fontsize`, `atto_fontfamily`, `atto_c4l` | 🟡 Medio | Evaluar migración a equivalentes TinyMCE. |
 | `block_grade_me` | 🟡 Medio | Confirmar si RemoteLearner sigue manteniendo el plugin. |
@@ -133,7 +132,7 @@ Los siguientes plugins son **esenciales** para el funcionamiento del sitio FPD y
 ## 5. Verificación de URLs
 
 Las URLs de los repositorios git fueron verificadas con `curl` el 2026-05-11:
-- **23 plugins** en catálogo.
+- **22 plugins** en catálogo.
 - **13 URLs corregidas** (repos movidos, renombrados o ramas cambiadas).
 - Todas las URLs activas retornan HTTP 200/301.
 
@@ -162,3 +161,5 @@ done
 |-------|-------|--------|
 | 2026-05-11 | Kimi Code CLI | Creación inicial del inventario (Moodle 4.1.x) |
 | 2026-05-15 | Kimi Code CLI | Actualización a Moodle 4.5.11, PHP 8.2, ramas git actualizadas, URLs verificadas, eliminación de mod_googlemeet |
+| 2026-05-22 | Kimi Code CLI | Eliminación de `block_configurable_reports` del catálogo (errores TLS + deprecado por Open LMS). Externalización de datos de inicialización a `init-data/`. |
+| 2026-05-25 | Kimi Code CLI | Fixes en scripts de inicialización: validación de IDs numéricos antes de matricular jefaturas; robustez ante cursos duplicados; healthcheck nativo de MariaDB. |

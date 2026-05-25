@@ -1,6 +1,6 @@
 ## 1. Análisis del proyecto y arquitectura actual
 
-> Fecha de actualización: 2026-05-15
+> Fecha de actualización: 2026-05-25
 > Rama: `apache-moodle`
 > Este documento refleja el estado del proyecto `new-moodle` tras la migración a **Apache + mod_php**, **Moodle 4.5.11** y **PHP 8.2**.
 
@@ -18,7 +18,7 @@ El proyecto es un despliegue **Docker Compose** de Moodle 4.5.11, preparado para
 | **Proxy inverso** | Red externa `moodle_network`, gestionada por proxy inverso externo (nginx-proxy, Traefik, etc.). | El contenedor `moodle` expone puerto `8080:80` en el host. |
 | **Configuraciones** | `./apache-conf/000-default.conf`, `./php-conf/` (opcache, uploads, desactivación de APCu). | Se eliminó `nginx/` y `fpm-conf/`. Apache gestiona PHP directamente vía mod_php. |
 | **Inicialización** | `./init-scripts/` con lógica de primer arranque (`new-install`) y actualizaciones (`upgrade`). | `plugins.json` + variables `PLUGIN_*` controlan qué plugins se instalan. Todos los comandos `moosh` usan flag `-n` para evitar warnings de propietario. |
-| **Gestión de usuarios** | CSV en `./init-data/data/usuarios.csv` + `load_usuarios.sh`. | Reemplaza la creación hardcodeada de usuarios en `moodle.sh` e `import_FPD_categories_and_courses.sh`. Los CSV se montan como volumen, no se copian en la imagen. |
+| **Gestión de usuarios** | CSV en `./init-data/data/usuarios.csv` + `load_usuarios.sh`. | Reemplaza la creación hardcodeada de usuarios en `moodle.sh` e `import_FPVirtual_categories_and_courses.sh`. Los CSV se montan como volumen, no se copian en la imagen. |
 
 ### 1.2. Diagrama de red
 
@@ -77,7 +77,7 @@ El proyecto es un despliegue **Docker Compose** de Moodle 4.5.11, preparado para
 - **Flexibilidad runtime**: Variables `PLUGIN_<NOMBRE>` en `.env` permiten habilitar/deshabilitar plugins sin reconstruir la imagen (aunque el código ya está en la imagen, las acciones post-instalación se ejecutan condicionalmente).
 
 **Archivos involucrados**:
-- `plugins.json`: Catálogo maestro (23 plugins).
+- `plugins.json`: Catálogo maestro (22 plugins).
 - `init-scripts/lib/docker-clone-plugins.sh`: Clona plugins durante el build.
 - `init-scripts/lib/plugins-lib.sh`: Helpers bash para leer JSON en runtime.
 - `init-scripts/new-install/plugins.sh`: Instala/configura plugins habilitados.
@@ -103,7 +103,7 @@ El proyecto es un despliegue **Docker Compose** de Moodle 4.5.11, preparado para
 
 ### 2.5. Carga de usuarios desde CSV
 
-**Decisión**: Extraer usuarios hardcodeados de `moodle.sh` e `import_FPD_categories_and_courses.sh` a un CSV.
+**Decisión**: Extraer usuarios hardcodeados de `moodle.sh` e `import_FPVirtual_categories_and_courses.sh` a un CSV.
 
 **Por qué**:
 - Facilita la modificación de usuarios sin tocar código.
@@ -124,6 +124,9 @@ El proyecto es un despliegue **Docker Compose** de Moodle 4.5.11, preparado para
 | `plugins.sh` falla silenciosamente | Imagen `php:8.2-apache` no incluye `python3`; `plugins-lib.sh` depende de él | Añadido `python3` al `Dockerfile` |
 | Warnings de Moosh por propietario | Scripts de init corren como `root` pero `moodledata` es de `www-data` | Añadido flag `-n` a todos los comandos `moosh` en scripts de inicialización |
 | Puerto host hardcodeado a `8087` | Dificultaba cambiar el puerto sin editar `docker-compose.yml` | Parametrizado con `${MOODLE_HOST_PORT:-8080}:80` y variable en `.env` |
+| Duplicados en creación de cursos | `course-create` fallaba con `shortnametaken` y el parsing de ID con grep era frágil | Se elimina extracción de IDs con regex; se usa SQL directo por `shortname`. Si existe, se busca el curso existente |
+| Matriculación de jefaturas con ID inválido | `moosh user-create` devolvía mensajes de error (no numéricos) que se pasaban a `course-enrol` | Se valida que el ID sea numérico antes de matricular; si `user-create` falla, se busca ID por `username` vía SQL |
+| Healthcheck MariaDB con `mysqladmin ping` | Generaba warnings `Access denied` cada 10s al no tener contraseña root | Se usa `healthcheck.sh --connect --innodb_initialized` nativo de la imagen |
 | Tema assets faltantes en instalación limpia | `moodle-data/filedir/` vacío | Extraídos 19 hashes de theme files del contenedor anterior y colocados en `moodle-data/filedir/` |
 
 ---
@@ -142,7 +145,7 @@ El `entrypoint.sh` ejecuta el siguiente flujo en cada arranque:
    - Si `INSTALL_TYPE=new-install`, ejecuta `/init-scripts/init.sh`:
      1. `new-install/moodle.sh` (configuración sitio, SMTP, idioma `es`, usuarios CSV)
      2. `new-install/plugins.sh` (instala/configura plugins habilitados según `plugins.json` + `PLUGIN_*`)
-     3. `new-install/import_FPD_categories_and_courses.sh` (categorías, cursos, roles, cohortes)
+     3. `new-install/import_FPVirtual_categories_and_courses.sh` (categorías, cursos, roles, cohortes)
      4. `new-install/theme.sh` (tema Moove + assets FPD)
    - Crea el flag `/var/www/moodledata/.moodle-installed`.
 7. **Si ya está instalado y `INSTALL_TYPE=upgrade`**:
@@ -162,7 +165,7 @@ Plugins habilitados por defecto:
 `theme_moove`, `format_tiles`, `block_xp`, `availability_xp`, `local_mail`, `mod_board`, `mod_pdfannotator`, `block_grade_me`, `block_completion_progress`, `atto_fontsize`, `atto_fontfamily`, `atto_fullscreen`, `qtype_gapfill`, `mod_attendance`, `mod_checklist`, `quizaccess_onesession`, `mod_choicegroup`.
 
 Plugins deshabilitados por defecto (requieren `PLUGIN_*=true`):
-`block_configurable_reports` (deprecado), `report_coursestats` (obsoleto), `mod_jitsi`, `block_sharing_cart`, `local_reminders`, `atto_c4l`.
+`report_coursestats_v2` (obsoleto), `mod_jitsi`, `block_sharing_cart`, `local_reminders`, `atto_c4l`.
 
 ### Scripts/aplicaciones PHP custom (no plugins)
 
@@ -214,4 +217,4 @@ MariaDB externa     Up  (3306/tcp, red Docker moodle_network)
 http://localhost:8080  (o via proxy inverso HTTPS)
 ```
 
-> **Última verificación (2026-05-22)**: Build exitoso, Apache arranca sin errores, config.php se genera automáticamente, plugins se clonan correctamente desde `plugins.json`, tema Moove se aplica tras fix de `python3` en imagen.
+> **Última verificación (2026-05-25)**: Build exitoso, Apache arranca sin errores, config.php se genera automáticamente, plugins se clonan correctamente desde `plugins.json`, tema Moove se aplica. Scripts de inicialización robustos ante duplicados de cursos y usuarios jefatura. Healthcheck de MariaDB usa script nativo.

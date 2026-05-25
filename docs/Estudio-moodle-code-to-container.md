@@ -1,6 +1,6 @@
 # Estudio: De `moodle-code` externo a imagen autocontenida
 
-> Fecha: 2026-05-15
+> Fecha: 2026-05-25
 > Rama: `apache-moodle`
 > Proyecto: new-moodle (migración a Apache + Moodle 4.5.11)
 > Objetivo: Documentar la arquitectura actual donde el código de Moodle y plugins se gestionan 100% dentro de la imagen Docker, sin dependencias de carpetas externas.
@@ -189,7 +189,7 @@ PLUGIN_BLOCK_CONFIGURABLE_REPORTS=false
 | mod_checklist | `davosmith/moodle-checklist` | `master` | ✅ habilitado |
 | quizaccess_onesession | `vadimonus/moodle-quizaccess_onesession` | `master` | ✅ habilitado |
 | mod_choicegroup | `ndunand/moodle-mod_choicegroup` | `master` | ✅ habilitado |
-| block_configurable_reports | `jleyva/moodle-block_configurablereports` | `MOODLE_4x_STABLE` | ❌ deshabilitado (deprecado) |
+
 | report_coursestats | `dired-ufla/moodle-report_coursestats_v2` | `main` | ❌ deshabilitado (obsoleto) |
 | mod_jitsi | `SergioComeron/moodle-mod_jitsi` | `master` | ❌ deshabilitado |
 | block_sharing_cart | `donhinkelman/moodle-block_sharing_cart` | `master` | ❌ deshabilitado |

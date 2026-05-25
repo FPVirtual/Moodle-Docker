@@ -19,6 +19,19 @@
 
 DATA_DIR="/init-data/data"
 
+# ------------------------------------------------------------------
+# Idempotencia: si ya existen datos clave de FPVirtual, salir
+# ------------------------------------------------------------------
+echo "Checking if FPVirtual data already exists..."
+ADMIN2_ID=$(moosh -n sql-run "SELECT id FROM mdl_user WHERE username='admin2'" | awk '/\[id\] =>/ {print $3}')
+JEFATURA_ROLE_ID=$(moosh -n sql-run "SELECT id FROM mdl_role WHERE shortname='jefatura-estudios'" | awk '/\[id\] =>/ {print $3}')
+
+if [ -n "$ADMIN2_ID" ] && [ -n "$JEFATURA_ROLE_ID" ]; then
+    echo "FPVirtual data already detected (admin2 ID=${ADMIN2_ID}, role jefatura-estudios ID=${JEFATURA_ROLE_ID}). Skipping import."
+    echo >&2 "... importing categories and courses. Skipped (already exists)."
+    exit 0
+fi
+
 echo >&2 "Importing categories and courses..."
 
 #############################################################################################
@@ -74,17 +87,19 @@ moosh -n role-import -f /init-scripts/themes/fpdist/roles/role-jefatura-estudios
 echo "Creating jefatura users from CSV..."
 while IFS=$'\t' read -r username password_env email firstname lastname cod_centro category_var
  do
-    echo "Creating jefatura user: ${username}"
+    echo "Processing jefatura user: ${username}"
     suffix=$(echo "${username}" | sed 's/prof_je_//')
     var_name="JE_${suffix^^}_USER_ID"
     
-    # Intentar crear usuario; si ya existe, buscar su ID
-    CREATE_OUTPUT=$(moosh -n user-create --password "${!password_env}" --email "${email}" --digest 2 --city Aragón --country ES --firstname "${firstname}" --lastname "${lastname}" "${username}" 2>&1)
-    USER_ID=$(echo "${CREATE_OUTPUT}" | grep -oP '\d+' | tail -1)
+    # Crear usuario si no existe; nunca parsear output de moosh (frágil ante errores)
+    moosh -n user-create --password "${!password_env}" --email "${email}" --digest 2 --city Aragón --country ES --firstname "${firstname}" --lastname "${lastname}" "${username}" >/dev/null 2>&1 || true
+    
+    # Obtener ID SIEMPRE por SQL (única fuente fiable)
+    USER_ID=$(moosh -n sql-run "SELECT id FROM mdl_user WHERE username='${username}'" | awk '/\[id\] =>/ {print $3}')
     
     if [ -z "$USER_ID" ] || ! echo "$USER_ID" | grep -qE '^[0-9]+$'; then
-        echo "  User ${username} may already exist. Looking up ID..."
-        USER_ID=$(moosh -n sql-run "SELECT id FROM mdl_user WHERE username='${username}'" | awk '/\[id\] =>/ {print $3}')
+        echo >&2 "ERROR: Could not resolve ID for ${username}. Skipping."
+        continue
     fi
     
     eval "${var_name}=${USER_ID}"
@@ -109,8 +124,16 @@ while IFS=$'\t' read -r var_name parent visible description name
         eval "parent_id=\${ID_CATEGORY_${parent}}"
     fi
 
-    echo "Creating category: ${name} (var=${var_name}, parent=${parent})"
-    eval "ID_CATEGORY_${var_name}=\$(moosh -n category-create -p \"\${parent_id}\" -v \"\${visible}\" -d \"\${description}\" \"\${name}\" | grep -oP '\\d+' | tail -1)"
+    # Buscar si la categoría ya existe en este parent
+    EXISTING_CAT_ID=$(moosh -n sql-run "SELECT id FROM mdl_course_categories WHERE name='${name}' AND parent=${parent_id}" | awk '/\[id\] =>/ {print $3}')
+    
+    if [ -n "$EXISTING_CAT_ID" ] && echo "$EXISTING_CAT_ID" | grep -qE '^[0-9]+$'; then
+        echo "Category already exists: ${name} (var=${var_name}, id=${EXISTING_CAT_ID})"
+        eval "ID_CATEGORY_${var_name}=${EXISTING_CAT_ID}"
+    else
+        echo "Creating category: ${name} (var=${var_name}, parent=${parent})"
+        eval "ID_CATEGORY_${var_name}=\$(moosh -n category-create -p \"\${parent_id}\" -v \"\${visible}\" -d \"\${description}\" \"\${name}\" | grep -oP '\\d+' | tail -1)"
+    fi
 done < <(php "${DATA_DIR}/read_csv.php" "${DATA_DIR}/categorias.csv")
 
 #############################################################################################
@@ -129,7 +152,7 @@ while IFS=$'\t' read -r username password_env email firstname lastname cod_centr
     user_var="JE_${suffix^^}_USER_ID"
     eval "user_id=\${${user_var}}"
     eval "cat_id=\${ID_CATEGORY_${category_var}}"
-    moosh -n sql-run "INSERT INTO mdl_user_info_data (userid, fieldid, data, dataformat) values (${user_id}, 1, ${cat_id}, 0)"
+    moosh -n sql-run "INSERT IGNORE INTO mdl_user_info_data (userid, fieldid, data, dataformat) VALUES (${user_id}, 1, ${cat_id}, 0)"
 done < <(php "${DATA_DIR}/read_csv.php" "${DATA_DIR}/jefaturas.csv")
 
 
@@ -141,7 +164,16 @@ echo "Creating cohorts from CSV..."
 while IFS=$'\t' read -r description id category_var name
  do
     eval "cat_id=\${ID_CATEGORY_${category_var}}"
-    moosh -n cohort-create -d "${description}" -i "${id}" -c "${cat_id}" "${name}"
+    
+    # Verificar si la cohorte ya existe por idnumber
+    EXISTING_COHORT_ID=$(moosh -n sql-run "SELECT id FROM mdl_cohort WHERE idnumber='${id}'" | awk '/\[id\] =>/ {print $3}')
+    
+    if [ -n "$EXISTING_COHORT_ID" ] && echo "$EXISTING_COHORT_ID" | grep -qE '^[0-9]+$'; then
+        echo "Cohort already exists: ${name} (idnumber=${id}, id=${EXISTING_COHORT_ID})"
+    else
+        echo "Creating cohort: ${name} (idnumber=${id})"
+        moosh -n cohort-create -d "${description}" -i "${id}" -c "${cat_id}" "${name}"
+    fi
 done < <(php "${DATA_DIR}/read_csv.php" "${DATA_DIR}/cohortes.csv")
 
 #############################################################################################
@@ -154,7 +186,7 @@ while IFS=$'\t' read -r username password_env email firstname lastname cod_centr
     suffix=$(echo "${username}" | sed 's/prof_je_//')
     user_var="JE_${suffix^^}_USER_ID"
     eval "user_id=\${${user_var}}"
-    moosh -n cohort-enrol -u "${user_id}" "jefaturas"
+    moosh -n cohort-enrol -u "${user_id}" "jefaturas" || true
 done < <(php "${DATA_DIR}/read_csv.php" "${DATA_DIR}/jefaturas.csv")
 
 
