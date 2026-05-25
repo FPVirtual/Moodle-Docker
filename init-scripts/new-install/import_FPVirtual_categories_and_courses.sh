@@ -77,7 +77,18 @@ while IFS=$'\t' read -r username password_env email firstname lastname cod_centr
     echo "Creating jefatura user: ${username}"
     suffix=$(echo "${username}" | sed 's/prof_je_//')
     var_name="JE_${suffix^^}_USER_ID"
-    eval "${var_name}=\$(moosh -n user-create --password \"\${${password_env}}\" --email \"${email}\" --digest 2 --city Aragón --country ES --firstname \"${firstname}\" --lastname \"${lastname}\" ${username})"
+    
+    # Intentar crear usuario; si ya existe, buscar su ID
+    CREATE_OUTPUT=$(moosh -n user-create --password "${!password_env}" --email "${email}" --digest 2 --city Aragón --country ES --firstname "${firstname}" --lastname "${lastname}" "${username}" 2>&1)
+    USER_ID=$(echo "${CREATE_OUTPUT}" | grep -oP '\d+' | tail -1)
+    
+    if [ -z "$USER_ID" ] || ! echo "$USER_ID" | grep -qE '^[0-9]+$'; then
+        echo "  User ${username} may already exist. Looking up ID..."
+        USER_ID=$(moosh -n sql-run "SELECT id FROM mdl_user WHERE username='${username}'" | awk '/\[id\] =>/ {print $3}')
+    fi
+    
+    eval "${var_name}=${USER_ID}"
+    echo "  ${username} -> ID=${USER_ID}"
 done < <(php "${DATA_DIR}/read_csv.php" "${DATA_DIR}/jefaturas.csv")
 
 #############################################################################################
@@ -260,72 +271,140 @@ while IFS=$'\t' read -r category_var shortname fullname visible
         CODCENTRO=$(echo "${shortname}" | cut -d '-' -f 1)
         case "${CODCENTRO}" in
             "22002521") # IES Sierra de Guara
-                echo "****** Enrolling the user ${JE_SG_USER_ID} into the course_id ${COURSE_ID} with role jefatura-estudios"
-                moosh -n course-enrol -r jefatura-estudios -i "${COURSE_ID}" "${JE_SG_USER_ID}"
+                if [ -n "${JE_SG_USER_ID}" ] && echo "${JE_SG_USER_ID}" | grep -qE '^[0-9]+$'; then
+                    echo "****** Enrolling the user ${JE_SG_USER_ID} into the course_id ${COURSE_ID} with role jefatura-estudios"
+                    moosh -n course-enrol -r jefatura-estudios -i "${COURSE_ID}" "${JE_SG_USER_ID}"
+                else
+                    echo "****** WARNING: Invalid user ID for JE_SG (${JE_SG_USER_ID}). Skipping enrolment."
+                fi
                 ;;
             "44003211") # IES SANTA EMERENCIANA
-                echo "****** Enrolling the user ${JE_SE_USER_ID} into the course_id ${COURSE_ID} with role jefatura-estudios"
-                moosh -n course-enrol -r jefatura-estudios -i "${COURSE_ID}" "${JE_SE_USER_ID}"
+                if [ -n "${JE_SE_USER_ID}" ] && echo "${JE_SE_USER_ID}" | grep -qE '^[0-9]+$'; then
+                    echo "****** Enrolling the user ${JE_SE_USER_ID} into the course_id ${COURSE_ID} with role jefatura-estudios"
+                    moosh -n course-enrol -r jefatura-estudios -i "${COURSE_ID}" "${JE_SE_USER_ID}"
+                else
+                    echo "****** WARNING: Invalid user ID for JE_SE (${JE_SE_USER_ID}). Skipping enrolment."
+                fi
                 ;;
             "50010511") # IES TIEMPOS MODERNOS
-                echo "****** Enrolling the user ${JE_TM_USER_ID} into the course_id ${COURSE_ID} with role jefatura-estudios"
-                moosh -n course-enrol -r jefatura-estudios -i "${COURSE_ID}" "${JE_TM_USER_ID}"
+                if [ -n "${JE_TM_USER_ID}" ] && echo "${JE_TM_USER_ID}" | grep -qE '^[0-9]+$'; then
+                    echo "****** Enrolling the user ${JE_TM_USER_ID} into the course_id ${COURSE_ID} with role jefatura-estudios"
+                    moosh -n course-enrol -r jefatura-estudios -i "${COURSE_ID}" "${JE_TM_USER_ID}"
+                else
+                    echo "****** WARNING: Invalid user ID for JE_TM (${JE_TM_USER_ID}). Skipping enrolment."
+                fi
                 ;;
             "50010314") # CPIFP LOS ENLACES
-                echo "****** Enrolling the user ${JE_LE_USER_ID} into the course_id ${COURSE_ID} with role jefatura-estudios"
-                moosh -n course-enrol -r jefatura-estudios -i "${COURSE_ID}" "${JE_LE_USER_ID}"
+                if [ -n "${JE_LE_USER_ID}" ] && echo "${JE_LE_USER_ID}" | grep -qE '^[0-9]+$'; then
+                    echo "****** Enrolling the user ${JE_LE_USER_ID} into the course_id ${COURSE_ID} with role jefatura-estudios"
+                    moosh -n course-enrol -r jefatura-estudios -i "${COURSE_ID}" "${JE_LE_USER_ID}"
+                else
+                    echo "****** WARNING: Invalid user ID for JE_LE (${JE_LE_USER_ID}). Skipping enrolment."
+                fi
                 ;;
             "50018829") # CPIFP CORONA DE ARAGÓN
-                echo "****** Enrolling the user ${JE_CA_USER_ID} into the course_id ${COURSE_ID} with role jefatura-estudios"
-                moosh -n course-enrol -r jefatura-estudios -i "${COURSE_ID}" "${JE_CA_USER_ID}"
+                if [ -n "${JE_CA_USER_ID}" ] && echo "${JE_CA_USER_ID}" | grep -qE '^[0-9]+$'; then
+                    echo "****** Enrolling the user ${JE_CA_USER_ID} into the course_id ${COURSE_ID} with role jefatura-estudios"
+                    moosh -n course-enrol -r jefatura-estudios -i "${COURSE_ID}" "${JE_CA_USER_ID}"
+                else
+                    echo "****** WARNING: Invalid user ID for JE_CA (${JE_CA_USER_ID}). Skipping enrolment."
+                fi
                 ;;
             "22010712") # CPIFP PIRÁMIDE
-                echo "****** Enrolling the user ${JE_PI_USER_ID} into the course_id ${COURSE_ID} with role jefatura-estudios"
-                moosh -n course-enrol -r jefatura-estudios -i "${COURSE_ID}" "${JE_PI_USER_ID}"
+                if [ -n "${JE_PI_USER_ID}" ] && echo "${JE_PI_USER_ID}" | grep -qE '^[0-9]+$'; then
+                    echo "****** Enrolling the user ${JE_PI_USER_ID} into the course_id ${COURSE_ID} with role jefatura-estudios"
+                    moosh -n course-enrol -r jefatura-estudios -i "${COURSE_ID}" "${JE_PI_USER_ID}"
+                else
+                    echo "****** WARNING: Invalid user ID for JE_PI (${JE_PI_USER_ID}). Skipping enrolment."
+                fi
                 ;;
             "44003028") # CPIFP SAN BLAS
-                echo "****** Enrolling the user ${JE_SB_USER_ID} into the course_id ${COURSE_ID} with role jefatura-estudios"
-                moosh -n course-enrol -r jefatura-estudios -i "${COURSE_ID}" "${JE_SB_USER_ID}"
+                if [ -n "${JE_SB_USER_ID}" ] && echo "${JE_SB_USER_ID}" | grep -qE '^[0-9]+$'; then
+                    echo "****** Enrolling the user ${JE_SB_USER_ID} into the course_id ${COURSE_ID} with role jefatura-estudios"
+                    moosh -n course-enrol -r jefatura-estudios -i "${COURSE_ID}" "${JE_SB_USER_ID}"
+                else
+                    echo "****** WARNING: Invalid user ID for JE_SB (${JE_SB_USER_ID}). Skipping enrolment."
+                fi
                 ;;
             "50010156") # IES MIRALBUENO
-                echo "****** Enrolling the user ${JE_MI_USER_ID} into the course_id ${COURSE_ID} with role jefatura-estudios"
-                moosh -n course-enrol -r jefatura-estudios -i "${COURSE_ID}" "${JE_MI_USER_ID}"
+                if [ -n "${JE_MI_USER_ID}" ] && echo "${JE_MI_USER_ID}" | grep -qE '^[0-9]+$'; then
+                    echo "****** Enrolling the user ${JE_MI_USER_ID} into the course_id ${COURSE_ID} with role jefatura-estudios"
+                    moosh -n course-enrol -r jefatura-estudios -i "${COURSE_ID}" "${JE_MI_USER_ID}"
+                else
+                    echo "****** WARNING: Invalid user ID for JE_MI (${JE_MI_USER_ID}). Skipping enrolment."
+                fi
                 ;;
             "50010144") # IES PABLO SERRANO
-                echo "****** Enrolling the user ${JE_PS_USER_ID} into the course_id ${COURSE_ID} with role jefatura-estudios"
-                moosh -n course-enrol -r jefatura-estudios -i "${COURSE_ID}" "${JE_PS_USER_ID}"
+                if [ -n "${JE_PS_USER_ID}" ] && echo "${JE_PS_USER_ID}" | grep -qE '^[0-9]+$'; then
+                    echo "****** Enrolling the user ${JE_PS_USER_ID} into the course_id ${COURSE_ID} with role jefatura-estudios"
+                    moosh -n course-enrol -r jefatura-estudios -i "${COURSE_ID}" "${JE_PS_USER_ID}"
+                else
+                    echo "****** WARNING: Invalid user ID for JE_PS (${JE_PS_USER_ID}). Skipping enrolment."
+                fi
                 ;;
             "44010537") # CPIFP BAJO ARAGÓN
-                echo "****** Enrolling the user ${JE_BA_USER_ID} into the course_id ${COURSE_ID} with role jefatura-estudios"
-                moosh -n course-enrol -r jefatura-estudios -i "${COURSE_ID}" "${JE_BA_USER_ID}"
+                if [ -n "${JE_BA_USER_ID}" ] && echo "${JE_BA_USER_ID}" | grep -qE '^[0-9]+$'; then
+                    echo "****** Enrolling the user ${JE_BA_USER_ID} into the course_id ${COURSE_ID} with role jefatura-estudios"
+                    moosh -n course-enrol -r jefatura-estudios -i "${COURSE_ID}" "${JE_BA_USER_ID}"
+                else
+                    echo "****** WARNING: Invalid user ID for JE_BA (${JE_BA_USER_ID}). Skipping enrolment."
+                fi
                 ;;
             "50009567") # IES RÍO GÁLLEGO
-                echo "****** Enrolling the user ${JE_RG_USER_ID} into the course_id ${COURSE_ID} with role jefatura-estudios"
-                moosh -n course-enrol -r jefatura-estudios -i "${COURSE_ID}" "${JE_RG_USER_ID}"
+                if [ -n "${JE_RG_USER_ID}" ] && echo "${JE_RG_USER_ID}" | grep -qE '^[0-9]+$'; then
+                    echo "****** Enrolling the user ${JE_RG_USER_ID} into the course_id ${COURSE_ID} with role jefatura-estudios"
+                    moosh -n course-enrol -r jefatura-estudios -i "${COURSE_ID}" "${JE_RG_USER_ID}"
+                else
+                    echo "****** WARNING: Invalid user ID for JE_RG (${JE_RG_USER_ID}). Skipping enrolment."
+                fi
                 ;;
             "44003235") # IES VEGA DEL TURIA
-                echo "****** Enrolling the user ${JE_VT_USER_ID} into the course_id ${COURSE_ID} with role jefatura-estudios"
-                moosh -n course-enrol -r jefatura-estudios -i "${COURSE_ID}" "${JE_VT_USER_ID}"
+                if [ -n "${JE_VT_USER_ID}" ] && echo "${JE_VT_USER_ID}" | grep -qE '^[0-9]+$'; then
+                    echo "****** Enrolling the user ${JE_VT_USER_ID} into the course_id ${COURSE_ID} with role jefatura-estudios"
+                    moosh -n course-enrol -r jefatura-estudios -i "${COURSE_ID}" "${JE_VT_USER_ID}"
+                else
+                    echo "****** WARNING: Invalid user ID for JE_VT (${JE_VT_USER_ID}). Skipping enrolment."
+                fi
                 ;;
             "50008460") # IES LUIS BUÑUEL
-                echo "****** Enrolling the user ${JE_LB_USER_ID} into the course_id ${COURSE_ID} with role jefatura-estudios"
-                moosh -n course-enrol -r jefatura-estudios -i "${COURSE_ID}" "${JE_LB_USER_ID}"
+                if [ -n "${JE_LB_USER_ID}" ] && echo "${JE_LB_USER_ID}" | grep -qE '^[0-9]+$'; then
+                    echo "****** Enrolling the user ${JE_LB_USER_ID} into the course_id ${COURSE_ID} with role jefatura-estudios"
+                    moosh -n course-enrol -r jefatura-estudios -i "${COURSE_ID}" "${JE_LB_USER_ID}"
+                else
+                    echo "****** WARNING: Invalid user ID for JE_LB (${JE_LB_USER_ID}). Skipping enrolment."
+                fi
                 ;;
             "22002491") # CPIFP MONTEARAGON
-                echo "****** Enrolling the user ${JE_MO_USER_ID} into the course_id ${COURSE_ID} with role jefatura-estudios"
-                moosh -n course-enrol -r jefatura-estudios -i "${COURSE_ID}" "${JE_MO_USER_ID}"
+                if [ -n "${JE_MO_USER_ID}" ] && echo "${JE_MO_USER_ID}" | grep -qE '^[0-9]+$'; then
+                    echo "****** Enrolling the user ${JE_MO_USER_ID} into the course_id ${COURSE_ID} with role jefatura-estudios"
+                    moosh -n course-enrol -r jefatura-estudios -i "${COURSE_ID}" "${JE_MO_USER_ID}"
+                else
+                    echo "****** WARNING: Invalid user ID for JE_MO (${JE_MO_USER_ID}). Skipping enrolment."
+                fi
                 ;;
             "22004611") # IES MARTÍNEZ VARGAS
-                echo "****** Enrolling the user ${JE_MV_USER_ID} into the course_id ${COURSE_ID} with role jefatura-estudios"
-                moosh -n course-enrol -r jefatura-estudios -i "${COURSE_ID}" "${JE_MV_USER_ID}"
+                if [ -n "${JE_MV_USER_ID}" ] && echo "${JE_MV_USER_ID}" | grep -qE '^[0-9]+$'; then
+                    echo "****** Enrolling the user ${JE_MV_USER_ID} into the course_id ${COURSE_ID} with role jefatura-estudios"
+                    moosh -n course-enrol -r jefatura-estudios -i "${COURSE_ID}" "${JE_MV_USER_ID}"
+                else
+                    echo "****** WARNING: Invalid user ID for JE_MV (${JE_MV_USER_ID}). Skipping enrolment."
+                fi
                 ;;
             "50009348") # IES AVEMPACE
-                echo "****** Enrolling the user ${JE_AV_USER_ID} into the course_id ${COURSE_ID} with role jefatura-estudios"
-                moosh -n course-enrol -r jefatura-estudios -i "${COURSE_ID}" "${JE_AV_USER_ID}"
+                if [ -n "${JE_AV_USER_ID}" ] && echo "${JE_AV_USER_ID}" | grep -qE '^[0-9]+$'; then
+                    echo "****** Enrolling the user ${JE_AV_USER_ID} into the course_id ${COURSE_ID} with role jefatura-estudios"
+                    moosh -n course-enrol -r jefatura-estudios -i "${COURSE_ID}" "${JE_AV_USER_ID}"
+                else
+                    echo "****** WARNING: Invalid user ID for JE_AV (${JE_AV_USER_ID}). Skipping enrolment."
+                fi
                 ;;
             "50008642") # IES MARÍA MOLINER
-                echo "****** Enrolling the user ${JE_MM_USER_ID} into the course_id ${COURSE_ID} with role jefatura-estudios"
-                moosh -n course-enrol -r jefatura-estudios -i "${COURSE_ID}" "${JE_MM_USER_ID}"
+                if [ -n "${JE_MM_USER_ID}" ] && echo "${JE_MM_USER_ID}" | grep -qE '^[0-9]+$'; then
+                    echo "****** Enrolling the user ${JE_MM_USER_ID} into the course_id ${COURSE_ID} with role jefatura-estudios"
+                    moosh -n course-enrol -r jefatura-estudios -i "${COURSE_ID}" "${JE_MM_USER_ID}"
+                else
+                    echo "****** WARNING: Invalid user ID for JE_MM (${JE_MM_USER_ID}). Skipping enrolment."
+                fi
                 ;;
         esac
     fi
