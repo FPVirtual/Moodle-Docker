@@ -1,5 +1,5 @@
 #!/bin/bash
-# Instalacion de plugins para FPD
+# Instalacion de plugins para FPVirtual 
 # Lee el catalogo desde plugins.json y las variables PLUGIN_* del .env
 
 set +x

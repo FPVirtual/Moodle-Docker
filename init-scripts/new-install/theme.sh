@@ -1,5 +1,5 @@
 #!/bin/bash
-# Configuración del tema para FPD
+# Configuración del tema para FPVirtual
 
 echo "Configuring theme..."
 

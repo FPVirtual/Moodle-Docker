@@ -1,7 +1,7 @@
-# Dockerfile para Moodle FPD basado en imágenes oficiales de Docker
-# Base: PHP-Apache 8.2 (oficial) - compatible con Moodle 4.5.x
+# Dockerfile para Moodle FPVirtual basado en imágenes oficiales de Docker
+# Base: PHP-Apache 8.1.33 (oficial) - compatible con Moodle 4.5.x
 
-FROM php:8.2-apache
+FROM php:8.1.33-apache
 
 # Instalar dependencias del sistema y extensiones PHP necesarias para Moodle
 RUN apt-get update && apt-get install -y --no-install-recommends \

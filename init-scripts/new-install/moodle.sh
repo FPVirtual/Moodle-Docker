@@ -1,5 +1,5 @@
 #!/bin/bash
-# Configuración inicial específica para FPD
+# Configuración inicial específica para FPVirtual
 
 # Config site
 moosh -n config-set forcetimezone Europe/Madrid
