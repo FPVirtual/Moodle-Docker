@@ -145,11 +145,13 @@ moosh -n userprofilefields-import /init-scripts/themes/fpdist/custom-fields/user
 # # Asignar a cada usuario el valor que le corresponde en el campo personalizado
 while IFS=$'\t' read -r username password_env email firstname lastname cod_centro category_var
  do
-    suffix=$(echo "${username}" | sed 's/prof_je_//')
-    user_var="JE_${suffix^^}_USER_ID"
-    eval "user_id=\${${user_var}}"
+    user_id="${JEFATURA_USER_IDS[$cod_centro]:-}"
     eval "cat_id=\${ID_CATEGORY_${category_var}}"
-    moosh -n sql-run "INSERT IGNORE INTO mdl_user_info_data (userid, fieldid, data, dataformat) VALUES (${user_id}, 1, ${cat_id}, 0)"
+    if [ -n "$user_id" ] && echo "$user_id" | grep -qE '^[0-9]+$'; then
+        moosh -n sql-run "INSERT IGNORE INTO mdl_user_info_data (userid, fieldid, data, dataformat) VALUES (${user_id}, 1, ${cat_id}, 0)"
+    else
+        echo >&2 "WARNING: No user_id found for ${username} (centro ${cod_centro}), skipping user_info_data"
+    fi
 done < <(php "${DATA_DIR}/read_csv.php" "${DATA_DIR}/jefaturas.csv")
 
 
