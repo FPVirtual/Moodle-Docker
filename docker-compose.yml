@@ -35,6 +35,9 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        PHP_BASE_IMAGE: "${PHP_BASE_IMAGE:-php:8.1.33-apache}"
+        MOODLE_VERSION: "${MOODLE_VERSION:-4.5.11}"
     container_name: fpvirtual-moodle
     restart: always
     depends_on:
