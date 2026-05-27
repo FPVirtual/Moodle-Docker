@@ -69,9 +69,6 @@ services:
       APP_TEACHER_PASSWORD: "${APP_TEACHER_PASSWORD}"
       API_USER_PASSWORD: "${API_USER_PASSWORD}"
       ENABLE_TEST_DATA: "${ENABLE_TEST_DATA:-false}"
-      BLACKBOARD_URL: "${BLACKBOARD_URL}"
-      BLACKBOARD_KEY: "${BLACKBOARD_KEY}"
-      BLACKBOARD_SECRET: "${BLACKBOARD_SECRET}"
     volumes:
       - ./moodle-data:/var/www/moodledata
       - ./init-data:/init-data:ro
