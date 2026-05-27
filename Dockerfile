@@ -1,7 +1,8 @@
 # Dockerfile para Moodle FPVirtual basado en imágenes oficiales de Docker
-# Base: PHP-Apache 8.1.33 (oficial) - compatible con Moodle 4.5.x
+# Variables configurables via build args (ver docker-compose.yml y .env)
 
-FROM php:8.1.33-apache
+ARG PHP_BASE_IMAGE=php:8.1.33-apache
+FROM ${PHP_BASE_IMAGE}
 
 # Instalar dependencias del sistema y extensiones PHP necesarias para Moodle
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -70,7 +71,7 @@ RUN git clone https://github.com/tmuras/moosh.git /opt/moosh \
 # Crear directorio de datos de Moodle
 RUN mkdir -p /var/www/moodledata && chown -R www-data:www-data /var/www/moodledata
 
-# Descargar Moodle 4.1.19 oficial desde GitHub
+# Descargar Moodle oficial desde GitHub (version configurable via build arg)
 ARG MOODLE_VERSION=4.5.11
 RUN curl -L https://github.com/moodle/moodle/archive/refs/tags/v${MOODLE_VERSION}.tar.gz | tar xz -C /tmp \
     && mv /tmp/moodle-* /usr/src/moodle \
