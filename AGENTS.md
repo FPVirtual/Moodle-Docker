@@ -61,13 +61,16 @@ Extensiones PHP instaladas en el Dockerfile:
 │   │   ├── docker-clone-plugins.sh    # Clona plugins en build-time desde plugins.json
 │   │   └── plugins-lib.sh             # Helpers bash para leer plugins.json en runtime
 │   ├── new-install/
-│   │   ├── moodle.sh                   # Configuración específica FPD del sitio
-│   │   ├── plugins.sh                  # Instalación y configuración de plugins
-│   │   ├── theme.sh                    # Tema Moove personalizado para FPD
-│   │   ├── import_FPD_categories_and_courses.sh  # Crea categorías, cursos, roles, cohortes
-│   │   ├── load_usuarios.sh            # Carga usuarios desde CSV
+│   │   ├── moodle.sh                         # Configuración específica FPVirtual del sitio
+│   │   ├── plugins.sh                        # Instalación y configuración de plugins
+│   │   ├── api_config.sh                     # Configura webservice REST y token API
+│   │   ├── import_FPVirtual_categories_and_courses.sh  # Crea categorías, cursos, roles, cohortes
+│   │   ├── load_usuarios.sh                  # Carga usuarios desde CSV
+│   │   ├── test_data.sh                      # Datos de test condicionales (ver ENABLE_TEST_DATA)
+│   │   ├── api_service_setup.php             # Script PHP auxiliar para crear servicio/token API
 │   │   └── data/
-│   │       └── usuarios.csv            # Usuarios iniciales
+│   │       ├── usuarios.csv                  # Usuarios iniciales (prod + estudiantes)
+│   │       └── usuarios_test.csv             # Usuarios exclusivos de test (prof_cd_daw, demoapp, etc.)
 │   ├── upgrade/
 │   │   ├── moodle.sh                   # Actualización de Moodle con expect
 │   │   ├── plugins.sh                  # Reinstalación de plugins
@@ -116,8 +119,10 @@ El `entrypoint.sh` del contenedor `moodle` ejecuta el siguiente flujo en cada ar
 Ejecuta secuencialmente los scripts ubicados en `/init-scripts/${INSTALL_TYPE}/`:
 1. `moodle.sh`
 2. `plugins.sh`
-3. `import_FPD_categories_and_courses.sh` (solo `new-install`)
-4. `theme.sh`
+3. `api_config.sh`
+4. `import_FPVirtual_categories_and_courses.sh` (solo `new-install`)
+5. `theme.sh`
+6. `test_data.sh` (solo `new-install`, condicional a `ENABLE_TEST_DATA=true`)
 
 Un script solo se ejecuta si tiene permiso de ejecución (`-x`). Si un script falla, el bucle continúa con el siguiente.
 
@@ -146,18 +151,33 @@ Incluye una función `actions_asociated_to_plugin` que configura cada plugin tra
 - Copia estilos SCSS, mustaches personalizadas (`footer.mustache`, `frontpage.mustache`) y assets gráficos.
 - Inyecta SCSS personalizado para ocultar elementos de la interfaz (CC, madeby, contact, etc.).
 
-### `new-install/import_FPD_categories_and_courses.sh`
-**Archivo crítico y altamente específico de FPD.** Crea:
-- Usuarios: `admin2` (admin FPD), `profinspector` (rol inspección), múltiples usuarios de jefatura de estudios (`prof_je_*`).
+### `new-install/import_FPVirtual_categories_and_courses.sh`
+**Archivo crítico y altamente específico de FPVirtual.** Crea:
 - Roles personalizados: `inspeccion`, `jefatura-estudios` (con permisos importados desde XML).
 - **Categorías fijas** para ~20 centros educativos (IES, CPIFP) con ciclos formativos.
 - **Cohortes** por centro y ciclo.
 - **Cursos** (~750 líneas en array `COURSES`): cada curso tiene `category*shortname*fullname*visible`.
   - Si existe un archivo `.mbz` en `/var/www/moodledata/repository/mbzs_curso_anterior/`, lo restaura.
   - Si no existe, crea un curso vacío.
-- Matriculaciones automáticas de cohortes y jefaturas de estudios.
+- Matriculaciones automáticas de cohortes y jefaturas de estudios (vía array asociativo `JEFATURA_USER_IDS`).
+
+Los usuarios de jefatura de estudios y el usuario `profinspector` se crean ahora en `load_usuarios.sh` (CSV `usuarios.csv`). Los usuarios de test (`prof_cd_daw`, `demoapp`, `profesor1`) se han movido a `test_data.sh`.
 
 > **⚠️ Convención estricta**: los IDs de categorías y cursos deben mantenerse invariables entre despliegues. Si un curso desaparece, se cambia el `1` del final por `0`; los nuevos cursos se añaden al final del array, nunca en medio.
+
+### `new-install/api_config.sh`
+Configura la API REST de Moodle para integración externa (app móvil, sistemas de gestión):
+- Activa webservices y protocolo REST (`moosh config-set`).
+- Crea el rol `integracion_api` con capacidades mínimas requeridas (`moosh role-create`, `role-update-capability`).
+- Asigna el rol al usuario `moodle-api` (`moosh user-assign-system-role`).
+- Delega la creación del servicio externo, funciones y token al script PHP `api_service_setup.php` (evita bug de `moosh sql-run` con parámetros con dos puntos).
+
+### `new-install/test_data.sh`
+Script condicional que solo se ejecuta si `ENABLE_TEST_DATA=true` (nunca en producción). Carga:
+- Usuarios desde `usuarios_test.csv` (`prof_cd_daw`, `demoapp`, `profesor1`, etc.).
+- Matriculaciones de test desde `matriculaciones_test.csv`.
+- Matricula `prof_cd_daw` automáticamente en todos los cursos de la categoría `cd_daw`.
+- Crea usuarios `demoapp` y `profesor1` para el curso de marketplaces si está habilitado.
 
 ### `upgrade/`
 Scripts simplificados para actualizaciones:
@@ -201,8 +221,10 @@ El archivo `plugins.json` (copiado a `/init-scripts/plugins.json` en la imagen) 
 
 Las variables de entorno `PLUGIN_<NOMBRE_EN_MAYUSCULAS>` en `.env` sobreescriben `default_enabled`. Si una variable no está definida, se usa el valor del JSON. Comentar una línea en `.env` equivale a dejar que el JSON decida.
 
-| `FPD_PASSWORD`, `FPD_EMAIL`, `MANAGER_PASSWORD` | Credenciales específicas de usuarios FPD |
+| `FPD_PASSWORD`, `FPD_EMAIL`, `MANAGER_PASSWORD` | Credenciales específicas de usuarios FPVirtual |
 | `APP_PASSWORD`, `APP_TEACHER_PASSWORD` | Credenciales para la app móvil de demo |
+| `API_USER_PASSWORD` | Contraseña del usuario `moodle-api` para integración REST |
+| `ENABLE_TEST_DATA` | `true` para cargar datos de test (`test_data.sh`). **Nunca en producción.** |
 | `BLACKBOARD_URL`, `BLACKBOARD_KEY`, `BLACKBOARD_SECRET` | Integración con Blackboard |
 
 ---
@@ -329,7 +351,7 @@ No hay suite de tests unitarios/integración automatizados. Las verificaciones m
 
 ## Notas para el mantenimiento
 
-- **IDs inmutables**: en `import_FPD_categories_and_courses.sh`, los IDs de categorías y cursos son críticos para la app móvil y automatizaciones. No reordenar el array `COURSES`.
+- **IDs inmutables**: en `import_FPVirtual_categories_and_courses.sh`, los IDs de categorías y cursos son críticos para la app móvil y automatizaciones. No reordenar el array `COURSES`.
 - **Moosh plugin-list**: los scripts de `new-install` filtran plugins por `VERSION_MINOR`. Si Moodle se actualiza a una nueva versión menor (ej. 4.1 → 4.2), asegurarse de que todos los plugins tengan versión compatible antes de desplegar.
 - **Plugins JSON**: al añadir un plugin nuevo, incluirlo en `plugins.json` y en `.env.example`. Reconstruir la imagen para que el JSON se copie a `/init-scripts/`.
 - **Expect en upgrade**: `upgrade/moodle.sh` usa `expect` para responder automáticamente al prompt de `upgrade.php`. Si el CLI de Moodle cambia su texto interactivo, el script de expect podría fallar.

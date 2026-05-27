@@ -52,14 +52,6 @@ if [ -z "$FPD_ADMIN_USER_ID" ]; then
     echo >&2 "WARNING: admin2 no encontrado, omitiendo de siteadmins"
 fi
 
-# Buscar ID del profesor de CD DAW (creado desde CSV)
-echo "Buscando profesor CD DAW..."
-PROF_CD_DAW_USER_ID=$(moosh -n sql-run "SELECT id FROM mdl_user WHERE username='prof_cd_daw'" | awk '/\[id\] =>/ {print $3}')
-if [ -n "$PROF_CD_DAW_USER_ID" ]; then
-    echo "Profesor CD DAW encontrado: ID=${PROF_CD_DAW_USER_ID}"
-else
-    echo >&2 "WARNING: prof_cd_daw no encontrado, no se matriculará en cursos cd_daw"
-fi
 
 # Crear rol de inspección
 echo "Creating inspeccion role and configuring it..."
@@ -269,31 +261,12 @@ while IFS=$'\t' read -r category_var shortname fullname visible
         moosh -n cohort-enrol -c "${COURSE_ID}" "jefaturas"
     fi
 
-    # matriculo en el curso de marketplaces a los usuarios que nos piden desde la app
-    if [[ ${shortname} == 'marketplaces' ]]; 
-    then
-        COHORT=$(echo "${shortname}" | cut -d '-' -f 1,2)
-        echo "****** Creating and enrolling the users for marketplaces into the course_id ${COURSE_ID}"
-        FPD_APP_USER_STUDENT_ID=$(moosh -n user-create --password "${APP_PASSWORD}" --email alumnado@education.catedu.es --digest 2 --city Aragón --country ES --firstname student --lastname demoapp demoapp)
-        FPD_APP_USER_TEACHER_ID=$(moosh -n user-create --password "${APP_TEACHER_PASSWORD}" --email alumnado@education.catedu.es --digest 2 --city Aragón --country ES --firstname teacher --lastname demoapp profesor1)
-
-        moosh -n course-enrol -r editingteacher -i "${COURSE_ID}" "${FPD_APP_USER_TEACHER_ID}"
-        moosh -n course-enrol -r student -i "${COURSE_ID}" "${FPD_APP_USER_STUDENT_ID}"
-    fi
-
     # si el cod_ensenanza contiene una t al final (es una tutoría) entonces matriculo a la cohorte en ese curso
     if [[ ${shortname} == *t ]]; 
     then
         COHORT=$(echo "${shortname}" | cut -d '-' -f 1,2)
         echo "****** Enrolling the cohort ${COHORT} into the course_id ${COURSE_ID}"
         moosh -n cohort-enrol -c "${COURSE_ID}" "${COHORT}"
-    fi
-
-    # Matricular al profesor CD DAW en todos los cursos de cd_daw
-    if [ "${category_var}" = "cd_daw" ] && [ -n "${PROF_CD_DAW_USER_ID}" ];
-    then
-        echo "****** Enrolling professor prof_cd_daw (ID=${PROF_CD_DAW_USER_ID}) into course_id ${COURSE_ID} with role editingteacher"
-        moosh -n course-enrol -r editingteacher -i "${COURSE_ID}" "${PROF_CD_DAW_USER_ID}"
     fi
 
     # Matricular a jefe de estudios en los cursos en base al ID centro del shortname
