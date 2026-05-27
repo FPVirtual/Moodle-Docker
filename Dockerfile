@@ -1,7 +1,7 @@
 # Dockerfile para Moodle FPVirtual basado en imágenes oficiales de Docker
-# Base: PHP-Apache 8.1.33 (oficial) - compatible con Moodle 4.5.x
+# Base: PHP-FPM 8.1 (oficial) - compatible con Moodle 4.5.x
 
-FROM php:8.1.33-apache
+FROM php:8.1-fpm
 
 # Instalar dependencias del sistema y extensiones PHP necesarias para Moodle
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -70,7 +70,7 @@ RUN git clone https://github.com/tmuras/moosh.git /opt/moosh \
 # Crear directorio de datos de Moodle
 RUN mkdir -p /var/www/moodledata && chown -R www-data:www-data /var/www/moodledata
 
-# Descargar Moodle 4.1.19 oficial desde GitHub
+# Descargar Moodle oficial desde GitHub
 ARG MOODLE_VERSION=4.5.11
 RUN curl -L https://github.com/moodle/moodle/archive/refs/tags/v${MOODLE_VERSION}.tar.gz | tar xz -C /tmp \
     && mv /tmp/moodle-* /usr/src/moodle \
@@ -103,13 +103,8 @@ RUN chmod +x /init-scripts/init.sh \
     && chmod +x /init-scripts/upgrade/*.sh \
     && chmod +x /init-scripts/lib/*.sh
 
-# Habilitar mod_rewrite para Moodle
-RUN a2enmod rewrite
-
-# Copiar configuración de Apache
-COPY apache-conf/000-default.conf /etc/apache2/sites-available/000-default.conf
-
-# Copiar configuraciones de PHP
+# Copiar configuraciones de PHP-FPM y PHP
+COPY fpm-conf /usr/local/etc/php-fpm.d
 COPY php-conf/opcache.ini /usr/local/etc/php/conf.d/opcache.ini
 COPY php-conf/uploads.ini /usr/local/etc/php/conf.d/uploads.ini
 COPY php-conf/zzz-disable-apcu.ini /usr/local/etc/php/conf.d/zzz-disable-apcu.ini
@@ -119,7 +114,7 @@ COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
 WORKDIR /var/www/html
-EXPOSE 80
+EXPOSE 9000
 
 ENTRYPOINT ["/entrypoint.sh"]
-CMD ["apache2-foreground"]
+CMD ["php-fpm"]
