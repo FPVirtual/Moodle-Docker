@@ -87,22 +87,17 @@ if ! moodle_is_installed; then
         --shortname="${MOODLE_SITE_NAME}" \
         --agree-license || true
 
-    # Ejecutar scripts de personalización si es instalación nueva
-    if [ "${INSTALL_TYPE:-new-install}" = "new-install" ]; then
-        echo "Ejecutando scripts de personalización para FPD..."
-        /init-scripts/init.sh
-    fi
+    # Ejecutar scripts de personalización para FPD
+    echo "Ejecutando scripts de personalización para FPD..."
+    /init-scripts/init.sh
 
     touch /var/www/moodledata/.moodle-installed
     echo "Instalación completada."
 else
     echo "Moodle ya instalado."
     
-    if [ "${INSTALL_TYPE:-}" = "upgrade" ]; then
-        echo "Ejecutando actualización de Moodle..."
-        php /var/www/html/admin/cli/upgrade.php --non-interactive --allow-unstable || true
-        /init-scripts/init.sh
-    fi
+    # Como cada instancia es una nueva instalación, no hay upgrade in-place
+    echo "Moodle ya instalado. No se ejecutan scripts de personalización en arranques posteriores."
 fi
 
 # Limpiar caché
