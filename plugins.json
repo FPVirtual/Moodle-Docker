@@ -223,6 +223,19 @@
       "has_postinstall_actions": false
     },
     {
+      "name": "mod_googlemeet",
+      "component": "mod_googlemeet",
+      "description": "Integracion de Google Meet en cursos.",
+      "category": "activity",
+      "moodle_path": "mod/googlemeet",
+      "install_method": "moosh",
+      "git_url": "https://github.com/ronefel/moodle-mod_googlemeet.git",
+      "git_branch": "master",
+      "default_enabled": false,
+      "has_postinstall_actions": true,
+      "warning": "PLUGIN ANTIGUO. Ultima actualizacion para Moodle 4.1. Usar bajo propia responsabilidad."
+    },
+    {
       "name": "mod_jitsi",
       "component": "mod_jitsi",
       "description": "Videoconferencia Jitsi Meet integrada en cursos.",
