@@ -14,8 +14,11 @@ for f in $FILES
 do
 	if [ -x "$f" ]; then
 		echo >&2 "$f executing..."
-		$f
-		echo >&2 "$f executed!"
+		if $f; then
+			echo >&2 "$f executed!"
+		else
+			echo >&2 "ERROR: $f failed with exit code $?"
+		fi
 	else
 		echo >&2 "$f skipped, no x permission"
 	fi
