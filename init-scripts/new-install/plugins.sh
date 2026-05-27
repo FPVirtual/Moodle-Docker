@@ -95,8 +95,8 @@ moosh -n plugin-list >/dev/null
 echo >&2 "Plugin list downloaded!"
 
 echo >&2 "Installing plugins..."
-echo "Moodle's version: ${VERSION}"
-VERSION_MINOR=$(echo ${VERSION} | cut -d. -f1,2)
+echo "Moodle's version: ${MOODLE_VERSION}"
+VERSION_MINOR=$(echo ${MOODLE_VERSION} | cut -d. -f1,2)
 echo "Moodle's minor version: ${VERSION_MINOR}"
 
 # Mostrar resumen antes de empezar

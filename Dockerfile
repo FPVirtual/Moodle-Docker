@@ -101,7 +101,6 @@ RUN chown -R www-data:www-data /var/www/html/decalogo /var/www/html/faqs \
 COPY init-scripts /init-scripts
 RUN chmod +x /init-scripts/init.sh \
     && chmod +x /init-scripts/new-install/*.sh \
-    && chmod +x /init-scripts/upgrade/*.sh \
     && chmod +x /init-scripts/lib/*.sh
 
 # Habilitar mod_rewrite para Moodle

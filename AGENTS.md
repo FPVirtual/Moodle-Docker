@@ -56,7 +56,7 @@ Extensiones PHP instaladas en el Dockerfile:
 │   └── zzz-disable-apcu.ini            # Desactiva APCu por estabilidad
 │
 ├── init-scripts/
-│   ├── init.sh                         # Orquestador: lanza scripts según INSTALL_TYPE
+│   ├── init.sh                         # Orquestador: lanza scripts de new-install
 │   ├── lib/
 │   │   ├── docker-clone-plugins.sh    # Clona plugins en build-time desde plugins.json
 │   │   └── plugins-lib.sh             # Helpers bash para leer plugins.json en runtime
@@ -71,10 +71,6 @@ Extensiones PHP instaladas en el Dockerfile:
 │   │   └── data/
 │   │       ├── usuarios.csv                  # Usuarios iniciales (prod + estudiantes)
 │   │       └── usuarios_test.csv             # Usuarios exclusivos de test (prof_cd_daw, demoapp, etc.)
-│   ├── upgrade/
-│   │   ├── moodle.sh                   # Actualización de Moodle con expect
-│   │   ├── plugins.sh                  # Reinstalación de plugins
-│   │   └── theme.sh                    # Reaplicación del tema
 │   └── themes/
 │       ├── fpdist/                     # Assets del tema FPD (imágenes, SCSS, mustaches, roles, informes)
 │       └── frontpage.mustache          # Plantilla personalizada de portada
@@ -104,11 +100,10 @@ El `entrypoint.sh` del contenedor `moodle` ejecuta el siguiente flujo en cada ar
 3. **Comprobar si Moodle ya está instalado**: consulta si existe la tabla `mdl_config`.
 4. **Si no está instalado**:
    - Ejecuta `admin/cli/install_database.php` (instalación no interactiva).
-   - Si `INSTALL_TYPE=new-install`, ejecuta `/init-scripts/init.sh`.
-   - Crea el flag `/var/www/moodledata/.moodle-installed`.
-5. **Si ya está instalado y `INSTALL_TYPE=upgrade`**:
-   - Ejecuta `admin/cli/upgrade.php --non-interactive --allow-unstable`.
    - Ejecuta `/init-scripts/init.sh`.
+   - Crea el flag `/var/www/moodledata/.moodle-installed`.
+5. **Si ya está instalado**:
+   - No se ejecutan scripts de personalización (cada instancia es una nueva instalación).
 6. **Purgar cachés** y arrancar `apache2-foreground`.
 
 ---
@@ -116,11 +111,11 @@ El `entrypoint.sh` del contenedor `moodle` ejecuta el siguiente flujo en cada ar
 ## Scripts de inicialización (`init-scripts/`)
 
 ### Orquestador (`init.sh`)
-Ejecuta secuencialmente los scripts ubicados en `/init-scripts/${INSTALL_TYPE}/`:
+Ejecuta secuencialmente los scripts ubicados en `/init-scripts/new-install/`:
 1. `moodle.sh`
 2. `plugins.sh`
 3. `api_config.sh`
-4. `import_FPVirtual_categories_and_courses.sh` (solo `new-install`)
+4. `import_FPVirtual_categories_and_courses.sh`
 5. `theme.sh`
 6. `test_data.sh` (solo `new-install`, condicional a `ENABLE_TEST_DATA=true`)
 
@@ -179,12 +174,6 @@ Script condicional que solo se ejecuta si `ENABLE_TEST_DATA=true` (nunca en prod
 - Matricula `prof_cd_daw` automáticamente en todos los cursos de la categoría `cd_daw`.
 - Crea usuarios `demoapp` y `profesor1` para el curso de marketplaces si está habilitado.
 
-### `upgrade/`
-Scripts simplificados para actualizaciones:
-- `moodle.sh`: usa `expect` para automatizar la respuesta interactiva de `upgrade.php` y reaplica ajustes post-upgrade.
-- `plugins.sh`: reinstala plugins habilitados según `plugins.json` + variables `PLUGIN_*` (sin filtrado por versión).
-- `theme.sh`: reaplica la configuración del tema Moove.
-
 ---
 
 ## Configuración y variables de entorno
@@ -201,8 +190,7 @@ Toda la configuración sensible y de entorno se define en **`.env`** (a partir d
 | `MOODLE_LANG`, `MOODLE_SITE_NAME`, `MOODLE_SITE_FULLNAME` | Idioma y nombre del sitio |
 | `SSL_PROXY`, `SSL_EMAIL` | Proxy SSL (Let's Encrypt) |
 | `SMTP_HOSTS`, `SMTP_USER`, `SMTP_PASSWORD`, `NO_REPLY_ADDRESS` | Configuración de correo |
-| `INSTALL_TYPE` | `new-install` o `upgrade` |
-| `VERSION` | Versión de Moodle (ej. `4.5.11`), usada para filtrar plugins |
+| `MOODLE_VERSION` | Versión de Moodle (ej. `4.5.11`), usada para descargar el código y filtrar plugins |
 | `MOODLE_DB_PORT` | Puerto de la base de datos (ej. `3306` para red Docker, o `3316` si se expone al host) |
 | `PLUGIN_<NAME>` | Habilita (`true`) o deshabilita (`false`) un plugin del catálogo. Ver `.env.example` |
 
@@ -295,18 +283,13 @@ Ver `UPGRADE.md` para el procedimiento completo. En resumen:
 
 ## Proceso de upgrade de Moodle
 
-Documentado detalladamente en `UPGRADE.md`. Pasos clave:
+Como cada instancia es una nueva instalación, el upgrade no se hace in-place sobre un contenedor existente. En su lugar:
 
 1. **Hacer backup** con `scripts/backup.sh`.
-2. Poner Moodle en modo mantenimiento: `docker compose exec moodle moosh -n maintenance-on`.
-3. Actualizar `MOODLE_VERSION` en el `Dockerfile`.
-4. Verificar compatibilidad de plugins y actualizar scripts de `init-scripts/upgrade/` si es necesario.
-5. Actualizar `VERSION` en `.env`.
-6. Cambiar `INSTALL_TYPE=upgrade` en `.env`.
-7. Reconstruir y reiniciar: `docker compose up -d --build`.
-8. Seguir logs: `docker compose logs -f moodle`.
-9. Una vez estable, volver a `INSTALL_TYPE=new-install`.
-10. Quitar modo mantenimiento y purgar cachés.
+2. Actualizar `MOODLE_VERSION` en el `Dockerfile` y `.env`.
+3. Verificar compatibilidad de plugins en `plugins.json`.
+4. Reconstruir la imagen y desplegar una **nueva instancia** sobre una BD limpia o restaurada.
+5. Seguir logs: `docker compose logs -f moodle`.
 
 > **Regla de oro**: nunca saltar más de una versión mayor de Moodle a la vez (ej. 4.1 → 4.2 → 4.3).
 
@@ -339,7 +322,7 @@ Documentado detalladamente en `UPGRADE.md`. Pasos clave:
 No hay suite de tests unitarios/integración automatizados. Las verificaciones manuales recomendadas son:
 
 - Tras una instalación nueva, acceder a `https://<VIRTUAL_HOST>/admin/index.php` y revisar notificaciones.
-- Tras un upgrade, ejecutar:
+- Tras una instalación nueva, ejecutar:
   ```bash
   docker compose exec moodle php /var/www/html/admin/cli/check_database_schema.php
   docker compose exec moodle php /var/www/html/admin/cli/purge_caches.php
@@ -351,9 +334,9 @@ No hay suite de tests unitarios/integración automatizados. Las verificaciones m
 ## Notas para el mantenimiento
 
 - **IDs inmutables**: en `import_FPVirtual_categories_and_courses.sh`, los IDs de categorías y cursos son críticos para la app móvil y automatizaciones. No reordenar el array `COURSES`.
-- **Moosh plugin-list**: los scripts de `new-install` filtran plugins por `VERSION_MINOR`. Si Moodle se actualiza a una nueva versión menor (ej. 4.1 → 4.2), asegurarse de que todos los plugins tengan versión compatible antes de desplegar.
+- **Moosh plugin-list**: los scripts de `new-install` filtran plugins por `VERSION_MINOR` extraída de `MOODLE_VERSION`. Si Moodle se actualiza a una nueva versión menor (ej. 4.1 → 4.2), asegurarse de que todos los plugins tengan versión compatible antes de desplegar.
 - **Plugins JSON**: al añadir un plugin nuevo, incluirlo en `plugins.json` y en `.env.example`. Reconstruir la imagen para que el JSON se copie a `/init-scripts/`.
-- **Expect en upgrade**: `upgrade/moodle.sh` usa `expect` para responder automáticamente al prompt de `upgrade.php`. Si el CLI de Moodle cambia su texto interactivo, el script de expect podría fallar.
+
 - **Volumen compartido moodle-data**: en despliegues de migración el `moodle-data` puede compartirse temporalmente con el contenedor anterior. Asegurarse siempre de que el contenedor anterior esté apagado antes de levantar el nuevo. Moodle no soporta dataroot compartido entre instancias activas.
 - **Override file**: `docker-compose.override.yml` se carga automáticamente. Para volver al código empaquetado en la imagen, basta con eliminar o renombrar este archivo.
 - **Imagen base**: `php:8.2-apache` usa Debian Bookworm. El paquete `libaio1` fue eliminado del `Dockerfile` porque no es necesario para MariaDB.

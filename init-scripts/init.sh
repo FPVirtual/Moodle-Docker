@@ -1,14 +1,14 @@
 #!/bin/bash
-# Script orquestador para FPD
-# Ejecuta los scripts correspondientes según INSTALL_TYPE
+# Script orquestador para FPD (new-install)
+# Ejecuta los scripts de personalización en una instalación nueva
 
-FILES="/init-scripts/${INSTALL_TYPE}/moodle.sh
-/init-scripts/${INSTALL_TYPE}/plugins.sh
-/init-scripts/${INSTALL_TYPE}/load_usuarios.sh
-/init-scripts/${INSTALL_TYPE}/import_FPVirtual_categories_and_courses.sh
-/init-scripts/${INSTALL_TYPE}/theme.sh
-/init-scripts/${INSTALL_TYPE}/api_config.sh
-/init-scripts/${INSTALL_TYPE}/test_data.sh"
+FILES="/init-scripts/new-install/moodle.sh
+/init-scripts/new-install/plugins.sh
+/init-scripts/new-install/load_usuarios.sh
+/init-scripts/new-install/import_FPVirtual_categories_and_courses.sh
+/init-scripts/new-install/theme.sh
+/init-scripts/new-install/api_config.sh
+/init-scripts/new-install/test_data.sh"
 
 
 for f in $FILES
