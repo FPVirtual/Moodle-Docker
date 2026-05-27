@@ -225,7 +225,6 @@ Las variables de entorno `PLUGIN_<NOMBRE_EN_MAYUSCULAS>` en `.env` sobreescriben
 | `APP_PASSWORD`, `APP_TEACHER_PASSWORD` | Credenciales para la app móvil de demo |
 | `API_USER_PASSWORD` | Contraseña del usuario `moodle-api` para integración REST |
 | `ENABLE_TEST_DATA` | `true` para cargar datos de test (`test_data.sh`). **Nunca en producción.** |
-| `BLACKBOARD_URL`, `BLACKBOARD_KEY`, `BLACKBOARD_SECRET` | Integración con Blackboard |
 
 ---
 
