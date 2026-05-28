@@ -225,9 +225,21 @@
     {
       "name": "mod_googlemeet",
       "component": "mod_googlemeet",
-      "description": "Integracion de Google Meet en cursos.",
+      "description": "Integracion de Google Meet en cursos (fork hyukudan).",
       "category": "activity",
       "moodle_path": "mod/googlemeet",
+      "install_method": "moosh",
+      "git_url": "https://github.com/hyukudan/moodle-mod_googlemeet.git",
+      "git_branch": "2.7.3",
+      "default_enabled": true,
+      "has_postinstall_actions": true
+    },
+    {
+      "name": "mod_googlemeet_legacy",
+      "component": "mod_googlemeet",
+      "description": "Integracion de Google Meet en cursos (version original ronefel).",
+      "category": "activity",
+      "moodle_path": "mod/googlemeet_legacy",
       "install_method": "moosh",
       "git_url": "https://github.com/ronefel/moodle-mod_googlemeet.git",
       "git_branch": "master",

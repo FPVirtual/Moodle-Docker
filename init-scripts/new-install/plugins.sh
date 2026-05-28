@@ -90,6 +90,19 @@ actions_asociated_to_plugin(){
 # main             #
 ####################
 
+# Google Meet: elegir entre fork hyukudan (moderno) o legacy (ronefel)
+# Ambos se clonan en build-time; aqui decidimos cual se activa en runtime.
+if [ "${PLUGIN_MOD_GOOGLEMEET_LEGACY:-false}" = "true" ]; then
+    echo >&2 "Google Meet legacy (ronefel) seleccionado. Reemplazando mod/googlemeet..."
+    rm -rf /var/www/html/mod/googlemeet
+    cp -a /var/www/html/mod/googlemeet_legacy /var/www/html/mod/googlemeet
+    # Deshabilitar hyukudan para evitar conflictos en el bucle de instalacion
+    PLUGIN_MOD_GOOGLEMEET=false
+elif [ "${PLUGIN_MOD_GOOGLEMEET:-false}" = "true" ]; then
+    # Hyukudan seleccionado: limpiar legacy para no ocupar espacio
+    rm -rf /var/www/html/mod/googlemeet_legacy
+fi
+
 echo >&2 "Downloading plugin list..."
 moosh -n plugin-list >/dev/null
 echo >&2 "Plugin list downloaded!"
