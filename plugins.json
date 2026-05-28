@@ -62,7 +62,19 @@
       "git_branch": "main",
       "default_enabled": true,
       "has_postinstall_actions": true
-    },    
+    },
+    {
+      "name": "local_educaaragon",
+      "component": "local_educaaragon",
+      "description": "Edicion de materiales del ministerio (Educa Aragon).",
+      "category": "local",
+      "moodle_path": "local/educaaragon",
+      "install_method": "moosh",
+      "git_url": "https://github.com/FPVirtual/fp-virtual-plugin-edicion-materiales.git",
+      "git_branch": "main",
+      "default_enabled": true,
+      "has_postinstall_actions": true
+    },
     {
       "name": "report_coursestats_v2",
       "component": "report_coursestats_v2",
