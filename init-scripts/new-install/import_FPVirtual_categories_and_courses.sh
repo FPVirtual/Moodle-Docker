@@ -121,7 +121,7 @@ while IFS=$'\t' read -r var_name parent visible description name
         eval "ID_CATEGORY_${var_name}=${EXISTING_CAT_ID}"
     else
         echo "Creating category: ${name} (var=${var_name}, parent=${parent})"
-        eval "ID_CATEGORY_${var_name}=\$(moosh -n category-create -p \"\${parent_id}\" -v \"\${visible}\" -d \"\${description}\" \"\${name}\" | grep -oP '\\d+' | tail -1)"
+        eval "ID_CATEGORY_${var_name}=\$(moosh -n category-create -p \"\${parent_id}\" -v \"\${visible}\" -d \"\${description}\" -i \"\${var_name}\" \"\${name}\" | grep -oP '\\d+' | tail -1)"
     fi
 done < <(php "${DATA_DIR}/read_csv.php" "${DATA_DIR}/categorias.csv")
 
