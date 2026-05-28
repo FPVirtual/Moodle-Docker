@@ -6,6 +6,7 @@
 /init-scripts/mbzs/
 /mbzs/
 /init-scripts/moodle-code/
+/recursos-editables/*
 /docker-compose.override.yml
 /Moodle-API-Test/.env
 .env
