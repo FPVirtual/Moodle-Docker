@@ -132,6 +132,8 @@ Configura el sitio Moodle mediante **Moosh**:
 ### `new-install/plugins.sh`
 Instala y configura plugins de terceros leyendo el catálogo desde **`/init-scripts/plugins.json`** y filtrando por las variables de entorno **`PLUGIN_*`** definidas en `.env`.
 
+Incluye la configuración automática del plugin `local_educaaragon`: mediante el script `educaaragon_setup.php` se crea (si no existe) un repositorio filesystem apuntando a `moodledata/repository/recursos-editables` y se configura el plugin para utilizarlo.
+
 Plugins disponibles (habilitados por defecto según `default_enabled` del JSON):
 `theme_moove`, `format_tiles`, `block_xp`, `availability_xp`, `local_mail`, `mod_board`, `mod_pdfannotator`, `block_grade_me`, `block_completion_progress`, `atto_fontsize`, `atto_fontfamily`, `atto_fullscreen`, `qtype_gapfill`, `mod_attendance`, `mod_checklist`, `quizaccess_onesession`, `mod_choicegroup`.
 
@@ -213,6 +215,7 @@ Las variables de entorno `PLUGIN_<NOMBRE_EN_MAYUSCULAS>` en `.env` sobreescriben
 | `APP_PASSWORD`, `APP_TEACHER_PASSWORD` | Credenciales para la app móvil de demo |
 | `API_USER_PASSWORD` | Contraseña del usuario `moodle-api` para integración REST |
 | `ENABLE_TEST_DATA` | `true` para cargar datos de test (`test_data.sh`). **Nunca en producción.** |
+| `EDUCAARAGON_RESOURCES_PATH` | Ruta en el host del directorio `recursos-editables` para el plugin `local_educaaragon`. Se monta en `/var/www/moodledata/repository/recursos-editables`. |
 
 ---
 
@@ -313,6 +316,7 @@ Como cada instancia es una nueva instalación, el upgrade no se hace in-place so
 - **Credenciales**: nunca commitear el archivo `.env` (está en `.gitignore`). Usar siempre `.env.example` como plantilla.
 - **SSL**: el tráfico HTTPS lo gestiona un proxy inverso externo (p. ej. `nginx-proxy`) conectado a la red `nginx-proxy_frontend`.
 - **Bind mounts**: `moodle-data/` se mantiene como volumen para persistencia. En el despliegue actual apunta al directorio del contenedor anterior (`/var/moodle-docker-deploy/www.fpvirtualaragon.es/moodle-data`). **Nunca levantar dos contenedores simultáneamente sobre el mismo `moodle-data`**; Moodle no soporta dataroot compartido entre instancias activas. El código puede ir dentro de la imagen (más seguro/reproducible) o montarse desde host (menos seguro, solo para desarrollo).
+- **Plugin local_educaaragon**: el directorio `recursos-editables/` del host se monta dentro del contenedor en `/var/www/moodledata/repository/recursos-editables` (vía variable `EDUCAARAGON_RESOURCES_PATH`). El script `educaaragon_setup.php` crea automáticamente el repositorio filesystem y configura el plugin durante la inicialización.
 - **Backups**: el script de backup requiere que las variables `MYSQL_ROOT_PASSWORD` y `MOODLE_DB_NAME` estén disponibles en el entorno desde el que se ejecuta.
 
 ---

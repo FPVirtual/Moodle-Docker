@@ -79,6 +79,10 @@ actions_asociated_to_plugin(){
             moosh -n config-set sqlsecurity 1 block_configurable_reports
             moosh -n config-set sqlsyntaxhighlight 1 block_configurable_reports
             ;;
+        "local_educaaragon")
+            echo "Configuring local_educaaragon..."
+            php /init-scripts/new-install/educaaragon_setup.php
+            ;;
         *)
             echo "No additional actions for plugin ${1}"
             ;;
