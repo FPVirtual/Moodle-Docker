@@ -23,7 +23,7 @@ if (!$type) {
     $type->create();
     $type = repository::get_type_by_typename('filesystem');
 }
-$type->update_visibility(REPOSITORY_INSTANCE_VISIBLE);
+$type->update_visibility(true);
 mtrace('Tipo de repositorio filesystem activado.');
 
 // 2. Buscar o crear la instancia del repositorio.
