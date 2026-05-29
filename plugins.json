@@ -62,7 +62,19 @@
       "git_branch": "main",
       "default_enabled": true,
       "has_postinstall_actions": true
-    },    
+    },
+    {
+      "name": "local_educaaragon",
+      "component": "local_educaaragon",
+      "description": "Edicion de materiales del ministerio (Educa Aragon).",
+      "category": "local",
+      "moodle_path": "local/educaaragon",
+      "install_method": "moosh",
+      "git_url": "https://github.com/FPVirtual/fp-virtual-plugin-edicion-materiales.git",
+      "git_branch": "main",
+      "default_enabled": true,
+      "has_postinstall_actions": true
+    },
     {
       "name": "report_coursestats_v2",
       "component": "report_coursestats_v2",
@@ -221,6 +233,31 @@
       "git_branch": "master",
       "default_enabled": true,
       "has_postinstall_actions": false
+    },
+    {
+      "name": "mod_googlemeet",
+      "component": "mod_googlemeet",
+      "description": "Integracion de Google Meet en cursos (fork hyukudan).",
+      "category": "activity",
+      "moodle_path": "mod/googlemeet",
+      "install_method": "moosh",
+      "git_url": "https://github.com/hyukudan/moodle-mod_googlemeet.git",
+      "git_branch": "2.7.3",
+      "default_enabled": true,
+      "has_postinstall_actions": true
+    },
+    {
+      "name": "mod_googlemeet_legacy",
+      "component": "mod_googlemeet",
+      "description": "Integracion de Google Meet en cursos (version original ronefel).",
+      "category": "activity",
+      "moodle_path": "mod/googlemeet_legacy",
+      "install_method": "moosh",
+      "git_url": "https://github.com/ronefel/moodle-mod_googlemeet.git",
+      "git_branch": "master",
+      "default_enabled": false,
+      "has_postinstall_actions": true,
+      "warning": "PLUGIN ANTIGUO. Ultima actualizacion para Moodle 4.1. Usar bajo propia responsabilidad."
     },
     {
       "name": "mod_jitsi",

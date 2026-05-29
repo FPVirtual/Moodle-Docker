@@ -35,6 +35,9 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        PHP_BASE_IMAGE: "${PHP_BASE_IMAGE:-php:8.1.33-apache}"
+        MOODLE_VERSION: "${MOODLE_VERSION:-4.5.11}"
     container_name: fpvirtual-moodle
     restart: always
     depends_on:
@@ -60,16 +63,14 @@ services:
       SMTP_MAXBULK: "${SMTP_MAXBULK}"
       NO_REPLY_ADDRESS: "${NO_REPLY_ADDRESS}"
       CRON_BROWSER_PASS: "${CRON_BROWSER_PASS}"
-      INSTALL_TYPE: "${INSTALL_TYPE}"
-      VERSION: "${VERSION}"
+      MOODLE_VERSION: "${MOODLE_VERSION}"
       FPVIRTUAL_PASSWORD: "${FPVIRTUAL_PASSWORD}"
       FPVIRTUAL_EMAIL: "${FPVIRTUAL_EMAIL}"
       MANAGER_PASSWORD: "${MANAGER_PASSWORD}"
       APP_PASSWORD: "${APP_PASSWORD}"
       APP_TEACHER_PASSWORD: "${APP_TEACHER_PASSWORD}"
-      BLACKBOARD_URL: "${BLACKBOARD_URL}"
-      BLACKBOARD_KEY: "${BLACKBOARD_KEY}"
-      BLACKBOARD_SECRET: "${BLACKBOARD_SECRET}"
+      API_USER_PASSWORD: "${API_USER_PASSWORD}"
+      ENABLE_TEST_DATA: "${ENABLE_TEST_DATA:-false}"
     volumes:
       - ./moodle-data:/var/www/moodledata
       - ./init-data:/init-data:ro
