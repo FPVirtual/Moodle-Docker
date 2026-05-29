@@ -317,6 +317,7 @@ Como cada instancia es una nueva instalación, el upgrade no se hace in-place so
 - **SSL**: el tráfico HTTPS lo gestiona un proxy inverso externo (p. ej. `nginx-proxy`) conectado a la red `nginx-proxy_frontend`.
 - **Bind mounts**: `moodle-data/` se mantiene como volumen para persistencia. En el despliegue actual apunta al directorio del contenedor anterior (`/var/moodle-docker-deploy/www.fpvirtualaragon.es/moodle-data`). **Nunca levantar dos contenedores simultáneamente sobre el mismo `moodle-data`**; Moodle no soporta dataroot compartido entre instancias activas. El código puede ir dentro de la imagen (más seguro/reproducible) o montarse desde host (menos seguro, solo para desarrollo).
 - **Plugin local_educaaragon**: el directorio `recursos-editables/` del host se monta dentro del contenedor en `/var/www/moodledata/repository/recursos-editables` (vía variable `EDUCAARAGON_RESOURCES_PATH`). El script `educaaragon_setup.php` crea automáticamente el repositorio filesystem y configura el plugin durante la inicialización.
+  > **⚠️ Importante**: no crear enlaces simbólicos absolutos dentro de `moodle-data/repository/`. Docker monta symlinks tal cual; una ruta absoluta del host no existirá dentro del contenedor. Usar siempre el bind mount del `docker-compose.yml`.
 - **Backups**: el script de backup requiere que las variables `MYSQL_ROOT_PASSWORD` y `MOODLE_DB_NAME` estén disponibles en el entorno desde el que se ejecuta.
 
 ---
