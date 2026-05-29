@@ -1,6 +1,6 @@
 services:
   db:
-    image: mariadb:10.11.16
+    image: mariadb:10.11.14
     container_name: fpvirtual-db
     restart: always
     profiles: ["with-db"]
