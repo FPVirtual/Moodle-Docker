@@ -58,8 +58,8 @@ Extensiones PHP instaladas en el Dockerfile:
 ├── init-scripts/
 │   ├── init.sh                         # Orquestador: lanza scripts de new-install
 │   ├── lib/
-│   │   ├── docker-clone-plugins.sh    # Clona plugins en build-time desde plugins.json
-│   │   └── plugins-lib.sh             # Helpers bash para leer plugins.json en runtime
+│   │   ├── docker-clone-plugins.sh    # Clona plugins en build-time desde init-data/plugins.json
+│   │   └── plugins-lib.sh             # Helpers bash para leer init-data/plugins.json en runtime
 │   ├── new-install/
 │   │   ├── moodle.sh                         # Configuración específica FPVirtual del sitio
 │   │   ├── plugins.sh                        # Instalación y configuración de plugins
@@ -85,7 +85,7 @@ Extensiones PHP instaladas en el Dockerfile:
 ├── scripts/
 │   └── backup.sh                       # Backup coordinado: BD + moodle-data
 │
-├── plugins.json                        # Catálogo maestro de plugins de terceros
+├── init-data/plugins.json              # Catálogo maestro de plugins de terceros (editable en runtime)
 └── moodle-data/                        # Datos de Moodle (bind mount, persistencia local)
 ```
 
@@ -130,7 +130,9 @@ Configura el sitio Moodle mediante **Moosh**:
 - Configuraciones de calificación, políticas de privacidad, analytics desactivado.
 
 ### `new-install/plugins.sh`
-Instala y configura plugins de terceros leyendo el catálogo desde **`/init-scripts/plugins.json`** y filtrando por las variables de entorno **`PLUGIN_*`** definidas en `.env`.
+Instala y configura plugins de terceros leyendo el catálogo desde **`/init-data/plugins.json`** (o, como fallback en build-time, `/init-scripts/plugins.json`) y filtrando por las variables de entorno **`PLUGIN_*`** definidas en `.env`.
+
+Incluye la configuración automática del plugin `local_educaaragon`: mediante el script `educaaragon_setup.php` se crea (si no existe) un repositorio filesystem apuntando a `moodledata/repository/recursos-editables` y se configura el plugin para utilizarlo.
 
 Plugins disponibles (habilitados por defecto según `default_enabled` del JSON):
 `theme_moove`, `format_tiles`, `block_xp`, `availability_xp`, `local_mail`, `mod_board`, `mod_pdfannotator`, `block_grade_me`, `block_completion_progress`, `atto_fontsize`, `atto_fontfamily`, `atto_fullscreen`, `qtype_gapfill`, `mod_attendance`, `mod_checklist`, `quizaccess_onesession`, `mod_choicegroup`.
@@ -196,9 +198,9 @@ Toda la configuración sensible y de entorno se define en **`.env`** (a partir d
 
 ---
 
-## Catálogo de plugins (`plugins.json`)
+## Catálogo de plugins (`init-data/plugins.json`)
 
-El archivo `plugins.json` (copiado a `/init-scripts/plugins.json` en la imagen) define:
+El archivo `init-data/plugins.json` (copiado a `/init-scripts/plugins.json` en la imagen durante el build, pero sobreescribible en runtime mediante el bind mount de `init-data`) define:
 - Nombre del componente (`name`, `component`).
 - Categoría y descripción.
 - Ruta de instalación en Moodle (`moodle_path`).
@@ -287,7 +289,7 @@ Como cada instancia es una nueva instalación, el upgrade no se hace in-place so
 
 1. **Hacer backup** con `scripts/backup.sh`.
 2. Actualizar `MOODLE_VERSION` en el `Dockerfile` y `.env`.
-3. Verificar compatibilidad de plugins en `plugins.json`.
+3. Verificar compatibilidad de plugins en `init-data/plugins.json`.
 4. Reconstruir la imagen y desplegar una **nueva instancia** sobre una BD limpia o restaurada.
 5. Seguir logs: `docker compose logs -f moodle`.
 
@@ -313,6 +315,8 @@ Como cada instancia es una nueva instalación, el upgrade no se hace in-place so
 - **Credenciales**: nunca commitear el archivo `.env` (está en `.gitignore`). Usar siempre `.env.example` como plantilla.
 - **SSL**: el tráfico HTTPS lo gestiona un proxy inverso externo (p. ej. `nginx-proxy`) conectado a la red `nginx-proxy_frontend`.
 - **Bind mounts**: `moodle-data/` se mantiene como volumen para persistencia. En el despliegue actual apunta al directorio del contenedor anterior (`/var/moodle-docker-deploy/www.fpvirtualaragon.es/moodle-data`). **Nunca levantar dos contenedores simultáneamente sobre el mismo `moodle-data`**; Moodle no soporta dataroot compartido entre instancias activas. El código puede ir dentro de la imagen (más seguro/reproducible) o montarse desde host (menos seguro, solo para desarrollo).
+- **Plugin local_educaaragon**: el directorio `recursos-editables/` del host se monta dentro del contenedor en `/var/www/moodledata/repository/recursos-editables` (vía variable `EDUCAARAGON_RESOURCES_PATH`). El script `educaaragon_setup.php` crea automáticamente el repositorio filesystem y configura el plugin durante la inicialización.
+  > **⚠️ Importante**: no crear enlaces simbólicos absolutos dentro de `moodle-data/repository/`. Docker monta symlinks tal cual; una ruta absoluta del host no existirá dentro del contenedor. Usar siempre el bind mount del `docker-compose.yml`.
 - **Backups**: el script de backup requiere que las variables `MYSQL_ROOT_PASSWORD` y `MOODLE_DB_NAME` estén disponibles en el entorno desde el que se ejecuta.
 
 ---
@@ -335,9 +339,9 @@ No hay suite de tests unitarios/integración automatizados. Las verificaciones m
 
 - **IDs inmutables**: en `import_FPVirtual_categories_and_courses.sh`, los IDs de categorías y cursos son críticos para la app móvil y automatizaciones. No reordenar el array `COURSES`.
 - **Moosh plugin-list**: los scripts de `new-install` filtran plugins por `VERSION_MINOR` extraída de `MOODLE_VERSION`. Si Moodle se actualiza a una nueva versión menor (ej. 4.1 → 4.2), asegurarse de que todos los plugins tengan versión compatible antes de desplegar.
-- **Plugins JSON**: al añadir un plugin nuevo, incluirlo en `plugins.json` y en `.env.example`. Reconstruir la imagen para que el JSON se copie a `/init-scripts/`.
+- **Plugins JSON**: al añadir un plugin nuevo, incluirlo en `init-data/plugins.json` y en `.env.example`. Reconstruir la imagen para que el JSON se copie a `/init-scripts/`; si solo se modifican habilitaciones/deshabilitaciones en runtime, basta con editar `init-data/plugins.json` y reiniciar el contenedor.
 
 - **Volumen compartido moodle-data**: en despliegues de migración el `moodle-data` puede compartirse temporalmente con el contenedor anterior. Asegurarse siempre de que el contenedor anterior esté apagado antes de levantar el nuevo. Moodle no soporta dataroot compartido entre instancias activas.
 - **Override file**: `docker-compose.override.yml` se carga automáticamente. Para volver al código empaquetado en la imagen, basta con eliminar o renombrar este archivo.
 - **Imagen base**: `php:8.2-apache` usa Debian Bookworm. El paquete `libaio1` fue eliminado del `Dockerfile` porque no es necesario para MariaDB.
-- **Plugins en imagen**: los plugins se clonan desde git durante el build usando `plugins.json` y `docker-clone-plugins.sh`. No requieren `moodle-code/` en el host.
+- **Plugins en imagen**: los plugins se clonan desde git durante el build usando `init-data/plugins.json` y `docker-clone-plugins.sh`. No requieren `moodle-code/` en el host.

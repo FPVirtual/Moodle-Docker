@@ -9,12 +9,12 @@
 
 ## 1. Objetivo
 
-Migrar el stack Docker de **nginx + php-fpm** a **Apache + mod_php**, actualizar Moodle a **4.5.11** y consolidar la gestión de plugins mediante un catálogo JSON (`plugins.json`).
+Migrar el stack Docker de **nginx + php-fpm** a **Apache + mod_php**, actualizar Moodle a **4.5.11** y consolidar la gestión de plugins mediante un catálogo JSON (`init-data/plugins.json`).
 
 Esta rama evoluciona el trabajo de `creacion_moodle-data_propio` (imagen autocontenida) añadiendo:
 - Simplificación del stack (elimina contenedor nginx).
 - Actualización de Moodle core y plugins a versiones 4.5 compatibles.
-- Sistema de gestión de plugins centralizado en `plugins.json`.
+- Sistema de gestión de plugins centralizado en `init-data/plugins.json`.
 - Carga de usuarios desde CSV.
 
 ---
@@ -31,7 +31,7 @@ Esta rama evoluciona el trabajo de `creacion_moodle-data_propio` (imagen autocon
 - **Apache + mod_php**: un solo contenedor para servidor web y PHP.
 - **Moodle 4.5.11**: versión LTS actual.
 - **PHP 8.2**: versión recomendada para Moodle 4.5.
-- **`plugins.json`**: catálogo maestro de plugins con metadatos y control vía variables de entorno.
+- **`init-data/plugins.json`**: catálogo maestro de plugins con metadatos y control vía variables de entorno.
 - **CSV de usuarios**: datos separados de la lógica de scripts.
 
 ---
@@ -44,7 +44,7 @@ Esta rama evoluciona el trabajo de `creacion_moodle-data_propio` (imagen autocon
 │  ──────────────────────────────────────────────────────────  │
 │  • Moodle 4.5.11 (descargado desde GitHub releases)          │
 │  • 22 plugins de terceros (clonados desde git vía            │
-│    plugins.json + docker-clone-plugins.sh)                   │
+│    init-data/plugins.json + docker-clone-plugins.sh)         │
 │  • Scripts PHP custom (custom/decalogo, faqs, etc.)          │
 │  • init-scripts (new-install + upgrade)                      │
 │  • Tema FPD (assets, SCSS, mustaches)                        │
@@ -78,7 +78,7 @@ Esta rama evoluciona el trabajo de `creacion_moodle-data_propio` (imagen autocon
 | `FROM php:8.1-fpm` | `FROM php:8.2-apache` |
 | nginx servía PHP vía FastCGI socket | Apache con mod_php directamente |
 | `COPY moodle-code /var/www/html` | Descarga Moodle 4.5.11 desde GitHub |
-| Plugins: ~20 `git clone` hardcoded en Dockerfile | Plugins: `docker-clone-plugins.sh` lee `plugins.json` |
+| Plugins: ~20 `git clone` hardcoded en Dockerfile | Plugins: `docker-clone-plugins.sh` lee `init-data/plugins.json` |
 
 **Instrucciones clave añadidas/cambiadas**:
 ```dockerfile
@@ -88,7 +88,7 @@ RUN curl -L https://github.com/moodle/moodle/archive/refs/tags/v${MOODLE_VERSION
     && mv /tmp/moodle-* /usr/src/moodle \
     && cp -r /usr/src/moodle/* /var/www/html/
 
-COPY plugins.json /init-scripts/plugins.json
+COPY init-data/plugins.json /init-scripts/plugins.json
 COPY init-scripts/lib/docker-clone-plugins.sh /init-scripts/lib/docker-clone-plugins.sh
 RUN /init-scripts/lib/docker-clone-plugins.sh
 
@@ -104,7 +104,7 @@ CMD ["apache2-foreground"]
 - El servicio `moodle` expone directamente `8080:80`.
 - Creado `apache-conf/000-default.conf` con VirtualHost para Moodle.
 
-### 4.3. `plugins.json` (nuevo archivo)
+### 4.3. `init-data/plugins.json` (catálogo de plugins)
 
 Catálogo maestro de 22 plugins con:
 - `name`, `component`, `description`, `category`
@@ -116,7 +116,7 @@ Catálogo maestro de 22 plugins con:
 ### 4.4. `init-scripts/lib/docker-clone-plugins.sh`
 
 Script de build-time que:
-1. Lee `plugins.json` con `jq`.
+1. Lee `/init-scripts/plugins.json` (copia de `init-data/plugins.json` en build-time) con `jq`.
 2. Clona cada plugin con `git clone --depth 1 --branch <rama>`.
 3. Falla el build si un clone es incorrecto.
 
@@ -131,7 +131,7 @@ Helpers en bash para runtime:
 
 Refactorizado para:
 - Cargar `plugins-lib.sh`.
-- Iterar sobre plugins habilitados (de `plugins.json` + variables `PLUGIN_*`).
+- Iterar sobre plugins habilitados (de `init-data/plugins.json` / `/init-data/plugins.json` + variables `PLUGIN_*`).
 - Ejecutar `actions_asociated_to_plugin()` para configuración post-instalación.
 
 ### 4.7. `init-scripts/new-install/load_usuarios.sh` y `data/usuarios.csv`
@@ -356,6 +356,6 @@ Para una instalación limpia con Moodle 4.5.11:
 
 ## 10. Contacto y mantenimiento
 
-- Si se detecta que un plugin no clona o no es compatible, actualizar `plugins.json`.
-- Para añadir un nuevo plugin: incluir en `plugins.json`, añadir `PLUGIN_<NOMBRE>` a `.env.example`, y añadir acciones post-instalación a `plugins.sh` si es necesario.
+- Si se detecta que un plugin no clona o no es compatible, actualizar `init-data/plugins.json`.
+- Para añadir un nuevo plugin: incluir en `init-data/plugins.json`, añadir `PLUGIN_<NOMBRE>` a `.env.example`, y añadir acciones post-instalación a `plugins.sh` si es necesario.
 - Antes de mergear esta rama a `main`, probar: instalación limpia completa (`new-install` + BD vacía) y upgrade (`upgrade` + BD poblada).

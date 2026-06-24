@@ -1,6 +1,7 @@
 #!/bin/bash
-# Instalacion de plugins para FPVirtual 
-# Lee el catalogo desde plugins.json y las variables PLUGIN_* del .env
+# Instalacion de plugins para FPVirtual
+# Lee el catalogo desde /init-data/plugins.json (o /init-scripts/plugins.json como fallback)
+# y las variables PLUGIN_* del .env
 
 set +x
 
@@ -78,6 +79,10 @@ actions_asociated_to_plugin(){
             moosh -n config-set sharedsqlrepository jleyva/moodle-custom_sql_report_queries block_configurable_reports
             moosh -n config-set sqlsecurity 1 block_configurable_reports
             moosh -n config-set sqlsyntaxhighlight 1 block_configurable_reports
+            ;;
+        "local_educaaragon")
+            echo "Configuring local_educaaragon..."
+            php /init-scripts/new-install/educaaragon_setup.php
             ;;
         *)
             echo "No additional actions for plugin ${1}"

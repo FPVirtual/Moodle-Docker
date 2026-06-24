@@ -71,8 +71,10 @@ services:
       APP_TEACHER_PASSWORD: "${APP_TEACHER_PASSWORD}"
       API_USER_PASSWORD: "${API_USER_PASSWORD}"
       ENABLE_TEST_DATA: "${ENABLE_TEST_DATA:-false}"
+      EDUCAARAGON_RESOURCES_PATH: "${EDUCAARAGON_RESOURCES_PATH:-./recursos-editables}"
     volumes:
       - /var/moodle-docker-deploy/www.fpvirtualaragon.es/moodle-data:/var/www/moodledata
+      - ${EDUCAARAGON_RESOURCES_PATH:-./recursos-editables}:/var/www/moodledata/repository/recursos-editables
       - ./init-data:/init-data:ro
       - phpsocket:/sock
       - /etc/timezone:/etc/timezone:ro

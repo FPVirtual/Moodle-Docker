@@ -79,7 +79,9 @@ RUN curl -L https://github.com/moodle/moodle/archive/refs/tags/v${MOODLE_VERSION
     && chown -R www-data:www-data /var/www/html /usr/src/moodle
 
 # Copiar catalogo de plugins y script de clones ANTES de ejecutarlos
-COPY plugins.json /init-scripts/plugins.json
+# El catalogo maestro vive en init-data/plugins.json (editable en runtime via bind mount);
+# durante el build se copia a /init-scripts para que docker-clone-plugins.sh pueda clonar plugins.
+COPY init-data/plugins.json /init-scripts/plugins.json
 COPY init-scripts/lib/docker-clone-plugins.sh /init-scripts/lib/docker-clone-plugins.sh
 RUN chmod +x /init-scripts/lib/docker-clone-plugins.sh
 
