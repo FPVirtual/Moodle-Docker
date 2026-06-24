@@ -12,7 +12,7 @@ Este documento describe paso a paso cómo actualizar Moodle a la siguiente versi
 En un despliegue basado en Docker con imagen autocontenida, actualizar Moodle implica **tres acciones principales**:
 
 1. **Actualizar la versión en el `Dockerfile`** (`ARG MOODLE_VERSION`).
-2. **Verificar compatibilidad de plugins** en `plugins.json` (ramas git, URLs).
+2. **Verificar compatibilidad de plugins** en `init-data/plugins.json` (ramas git, URLs).
 3. **Reconstruir la imagen Docker** y ejecutar el upgrade automático cuando `INSTALL_TYPE=upgrade`.
 
 > Diferencia clave respecto a despliegues anteriores: ya no se actualiza código en `moodle-code/`. El código se descarga durante el build.
@@ -65,16 +65,16 @@ ARG MOODLE_VERSION=4.5.12
 
 ## Paso 3. Verificar compatibilidad de plugins
 
-Revisa `plugins.json` y verifica en [moodle.org/plugins](https://moodle.org/plugins) que los plugins tengan versiones compatibles con la nueva versión de Moodle.
+Revisa `init-data/plugins.json` y verifica en [moodle.org/plugins](https://moodle.org/plugins) que los plugins tengan versiones compatibles con la nueva versión de Moodle.
 
-- Actualiza `git_branch` en `plugins.json` si es necesario (ej. de `MOODLE_405_STABLE` a `MOODLE_406_STABLE`).
+- Actualiza `git_branch` en `init-data/plugins.json` si es necesario (ej. de `MOODLE_405_STABLE` a `MOODLE_406_STABLE`).
 - Elimina plugins obsoletos o que ya no tengan soporte.
 - Si algún plugin personalizado está en `custom/`, asegúrate de que también se haya actualizado.
 
 Puedes verificar rápidamente las URLs de los repositorios:
 
 ```bash
-jq -r '.plugins[].git_url' plugins.json | while read url; do
+jq -r '.plugins[].git_url' init-data/plugins.json | while read url; do
   status=$(curl -s -o /dev/null -w "%{http_code}" "$url")
   echo "$status $url"
 done
@@ -231,7 +231,7 @@ Si algo sale mal y necesitas volver atrás **antes de que los usuarios hayan ent
 - [ ] Backup de BD y `moodle-data` realizado.
 - [ ] Moodle en modo mantenimiento.
 - [ ] `MOODLE_VERSION` actualizada en `Dockerfile`.
-- [ ] Plugins verificados en `plugins.json` (ramas git, URLs).
+- [ ] Plugins verificados en `init-data/plugins.json` (ramas git, URLs).
 - [ ] `.env` actualizado con la nueva `VERSION`.
 - [ ] `INSTALL_TYPE=upgrade` en `.env`.
 - [ ] `docker compose up -d --build` ejecutado.

@@ -5,6 +5,8 @@
 
 set -e
 
+# Este script se ejecuta en build-time; /init-data no esta disponible aun.
+# Lee la copia del catalogo empaquetada en /init-scripts/plugins.json.
 JSON_FILE="/init-scripts/plugins.json"
 BASE_DIR="/var/www/html"
 
