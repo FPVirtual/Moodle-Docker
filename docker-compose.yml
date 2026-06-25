@@ -18,6 +18,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    ports:
+      - "${MOODLE_DB_PORT:-3306}:3306"
 
   redis:
     image: redis:7-alpine

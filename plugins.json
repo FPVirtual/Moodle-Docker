@@ -71,7 +71,7 @@
       "moodle_path": "local/educaaragon",
       "install_method": "moosh",
       "git_url": "https://github.com/FPVirtual/fp-virtual-plugin-edicion-materiales.git",
-      "git_branch": "main",
+      "git_branch": "feature/php82-compatibility",
       "default_enabled": true,
       "has_postinstall_actions": true
     },
