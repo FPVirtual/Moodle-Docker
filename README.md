@@ -9,7 +9,7 @@ Este proyecto es una versión modernizada y autocontenida del despliegue de Mood
 | Imagen Moodle | `php:8.1-fpm` + nginx separado | `php:8.2-apache` (mod_php integrado) |
 | Base de datos | Externa (no definida en compose) | MariaDB **opcional** en `docker-compose.yml` (perfil `with-db`) o **externa** configurable |
 | Código Moodle | Bind mount (`./moodle-code`) o copiado del host | Descargado desde GitHub releases durante el build |
-| Plugins | Hardcoded en Dockerfile o copiados | Catálogo `plugins.json` + `docker-clone-plugins.sh` |
+| Plugins | Hardcoded en Dockerfile o copiados | Catálogo `init-data/plugins.json` + `docker-clone-plugins.sh` |
 | Datos (`moodle-data`) | Bind mount | **Mantiene bind mount** para facilitar backups |
 | Datos de inicialización | Dentro de `init-scripts/` (copiados en imagen) | Volumen `./init-data/` (CSV + backups `.mbz`) fuera de la imagen |
 | Gestión usuarios | Hardcodeado en scripts | CSV en `./init-data/data/` + `load_usuarios.sh` |
@@ -25,7 +25,7 @@ new-moodle/
 ├── docker-compose.override.yml.example # Override para montar código Moodle externo
 ├── .env.example                        # Plantilla de variables de entorno
 ├── entrypoint.sh                       # Entrypoint que instala/configura Moodle
-├── plugins.json                        # Catálogo maestro de plugins de terceros
+├── init-data/plugins.json              # Catálogo maestro de plugins de terceros (editable en runtime)
 ├── apache-conf/
 │   └── 000-default.conf                # Configuración de Apache VirtualHost
 ├── php-conf/                           # Configuraciones PHP (uploads, opcache...)
@@ -137,7 +137,7 @@ La primera vez que arranca:
 
 ## Plugins de terceros
 
-Los plugins se definen en `plugins.json` y se clonan durante el build de la imagen.
+Los plugins se definen en `init-data/plugins.json` y se clonan durante el build de la imagen.
 
 Para habilitar/deshabilitar plugins en runtime, usa variables `PLUGIN_*` en `.env`:
 
@@ -147,7 +147,7 @@ PLUGIN_BLOCK_CONFIGURABLE_REPORTS=false
 # PLUGIN_MOD_JITSI=false
 ```
 
-Ver `plugins.json` para el listado completo con descripciones y advertencias.
+Ver `init-data/plugins.json` para el listado completo con descripciones y advertencias.
 
 ## Backups
 
@@ -163,7 +163,7 @@ Genera en `./backups/`:
 ## Actualizaciones (upgrade)
 
 1. Actualiza `MOODLE_VERSION` en el `Dockerfile`.
-2. Actualiza ramas de plugins en `plugins.json` si es necesario.
+2. Actualiza ramas de plugins en `init-data/plugins.json` si es necesario.
 3. Cambia en `.env`:
    ```env
    INSTALL_TYPE=upgrade

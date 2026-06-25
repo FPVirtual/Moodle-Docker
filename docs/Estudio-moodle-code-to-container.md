@@ -12,7 +12,7 @@
 El objetivo original de este estudio (eliminar la dependencia de `moodle-code/` copiado del host) **ha sido alcanzado** en la rama `apache-moodle`. La imagen Docker ahora:
 
 1. Descarga Moodle core desde GitHub releases durante el build.
-2. Clona plugins desde repositorios git usando `plugins.json` como catálogo maestro.
+2. Clona plugins desde repositorios git usando `init-data/plugins.json` como catálogo maestro.
 3. Copia scripts PHP custom desde `custom/`.
 4. Genera `config.php` automáticamente en runtime desde variables de entorno.
 
@@ -27,7 +27,7 @@ El objetivo original de este estudio (eliminar la dependencia de `moodle-code/` 
 │  Imagen Docker (build)                                      │
 │  ─────────────────────────────────────────────────────────  │
 │  1. Descargar Moodle 4.5.11 desde GitHub releases           │
-│  2. Leer plugins.json → clonar plugins con                 │
+│  2. Leer init-data/plugins.json → clonar plugins con       │
 │     docker-clone-plugins.sh                                 │
 │  3. COPY custom/ → /var/www/html/ (scripts PHP propios)     │
 │  4. COPY init-scripts/ → /init-scripts/                     │
@@ -48,11 +48,11 @@ El objetivo original de este estudio (eliminar la dependencia de `moodle-code/` 
 
 ---
 
-## 3. Sistema de gestión de plugins (`plugins.json`)
+## 3. Sistema de gestión de plugins (`init-data/plugins.json`)
 
 ### 3.1. Estructura del catálogo
 
-El archivo `plugins.json` (raíz del proyecto, copiado a `/init-scripts/plugins.json` en la imagen) contiene metadatos de cada plugin:
+El archivo `init-data/plugins.json` (copiado a `/init-scripts/plugins.json` en la imagen durante el build, y montado desde el host en runtime vía bind mount) contiene metadatos de cada plugin:
 
 ```json
 {
@@ -82,13 +82,13 @@ Campos clave:
 Ejecutado durante el build del Dockerfile:
 
 ```dockerfile
-COPY plugins.json /init-scripts/plugins.json
+COPY init-data/plugins.json /init-scripts/plugins.json
 COPY init-scripts/lib/docker-clone-plugins.sh /init-scripts/lib/docker-clone-plugins.sh
 RUN /init-scripts/lib/docker-clone-plugins.sh
 ```
 
 El script:
-1. Lee `plugins.json` con `jq`.
+1. Lee `/init-scripts/plugins.json` con `jq`.
 2. Para cada plugin con `git_url`, ejecuta `git clone --depth 1 --branch <rama> <url>` en `moodle_path`.
 3. Si el directorio destino ya existe (ej. parte de core), lo omite.
 4. Falla el build si un clone devuelve error (garantiza integridad).
@@ -132,8 +132,8 @@ PLUGIN_BLOCK_CONFIGURABLE_REPORTS=false
 | **Imagen PHP** | `php:8.1-fpm` | `php:8.2-apache` |
 | **Servidor web** | nginx (contenedor separado `web`) | Apache + mod_php (mismo contenedor) |
 | **Moodle core** | Copiado desde `moodle-code/` del host | Descargado desde GitHub releases en build |
-| **Plugins** | Hardcoded en Dockerfile (`RUN git clone ...`) o copiados desde host | Centralizados en `plugins.json`, clonados por `docker-clone-plugins.sh` |
-| **Control de plugins** | Editar Dockerfile y scripts | Editar `plugins.json` y/o variables `PLUGIN_*` en `.env` |
+| **Plugins** | Hardcoded en Dockerfile (`RUN git clone ...`) o copiados desde host | Centralizados en `init-data/plugins.json`, clonados por `docker-clone-plugins.sh` |
+| **Control de plugins** | Editar Dockerfile y scripts | Editar `init-data/plugins.json` y/o variables `PLUGIN_*` en `.env` |
 | **Verificación URLs** | Manual | Automatizable (curl a cada `git_url`) |
 | **Código custom** | En `moodle-code/` mezclado con core | En `custom/`, copiado explícitamente vía `COPY` |
 | **Usuarios** | Hardcodeados en shell scripts | CSV `usuarios.csv` + `load_usuarios.sh` |

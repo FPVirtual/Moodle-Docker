@@ -1,7 +1,8 @@
 /backups/
 /moodle-data/
 /moodle-code/
-/init-data/
+/init-data/**
+!/init-data/plugins.json
 /init-data/mbzs/
 /init-scripts/mbzs/
 /mbzs/

@@ -1,6 +1,7 @@
 #!/bin/bash
-# Instalacion de plugins para FPVirtual 
-# Lee el catalogo desde plugins.json y las variables PLUGIN_* del .env
+# Instalacion de plugins para FPVirtual
+# Lee el catalogo desde /init-data/plugins.json (o /init-scripts/plugins.json como fallback)
+# y las variables PLUGIN_* del .env
 
 set +x
 

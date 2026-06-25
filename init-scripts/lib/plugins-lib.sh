@@ -7,7 +7,13 @@
 # Dependencias: python3 (disponible en la imagen php:8.2-apache de Debian)
 # =============================================================================
 
-PLUGINS_JSON="${PLUGINS_JSON:-/init-scripts/plugins.json}"
+# El catalogo maestro puede sobrescribirse en runtime montando init-data/plugins.json.
+# En build-time o si no hay override, se usa la copia empaquetada en /init-scripts/plugins.json.
+if [ -f "/init-data/plugins.json" ]; then
+    PLUGINS_JSON="${PLUGINS_JSON:-/init-data/plugins.json}"
+else
+    PLUGINS_JSON="${PLUGINS_JSON:-/init-scripts/plugins.json}"
+fi
 
 # ---------------------------------------------------------------------------
 # Verifica que exista el archivo JSON
