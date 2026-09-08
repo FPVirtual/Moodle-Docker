@@ -1,7 +1,9 @@
 # Plan de corrección: API Moodle (moodle-api) sin privilegios de admin
 
 > Fecha: 2026-05-26  
-> Estado: Pendiente de implementar los cambios de archivo. El diagnóstico está completo.
+> Estado: **COMPLETADO y verificado en el despliegue** (verificación: 2026-09-08).  
+> Los 4 bugs están corregidos y el usuario `moodle-api` opera con el rol limitado `integracion_api`.  
+> Token del servicio `test_api` validado con una llamada REST real (`core_webservice_get_site_info`).
 
 ---
 
@@ -266,23 +268,29 @@ if ($token) {
 
 ---
 
-## 4. LISTA DE TAREAS PENDIENTES (checklist)
+## 4. CHECKLIST (completado el 2026-05-29, verificado el 2026-09-08)
 
-- [ ] Modificar `init-data/data/usuarios.csv` (cambiar `admin` → `user` para `moodle-api`).
-- [ ] Modificar `init-scripts/new-install/import_FPVirtual_categories_and_courses.sh` (quitar `moodle-api` de `siteadmins`).
-- [ ] Crear `init-scripts/new-install/api_service_setup.php` (script PHP CLI nativo).
-- [ ] Reescribir `init-scripts/new-install/api_config.sh` (usar `moosh` nativo + llamada al PHP).
-- [ ] Verificar que `api_config.sh` tenga permisos de ejecución (`chmod +x`).
-- [ ] Probar levantando de cero: `docker compose down -v`, borrar moodle-data, `docker compose up -d --build`.
-- [ ] Ejecutar `test_moodle_api_v3.py` para validar que el token funciona.
+- [x] Modificar `init-data/data/usuarios.csv` (cambiar `admin` → `user` para `moodle-api`).
+- [x] Modificar `init-scripts/new-install/import_FPVirtual_categories_and_courses.sh` (quitar `moodle-api` de `siteadmins`).
+- [x] Crear `init-scripts/new-install/api_service_setup.php` (script PHP CLI nativo).
+- [x] Reescribir `init-scripts/new-install/api_config.sh` (usar `moosh` nativo + llamada al PHP).
+- [x] Verificar que `api_config.sh` tenga permisos de ejecución (`chmod +x`).
+- [x] Probar levantando de cero: `docker compose down -v`, borrar moodle-data, `docker compose up -d --build`. *(El stack se reinstaló con estos cambios el 27-05-2026 y lleva en ejecución desde entonces.)*
+
+**Verificación en el despliegue en ejecución (2026-09-08):**
+
+- [x] `moodle-api` (id 15) **no** es siteadmin en la BD en ejecución; `siteadmins = 2,3` (`admin`, `admin2`).
+- [x] El rol `integracion_api` existe y el token permanente del servicio `test_api` está generado.
+- [x] Llamada REST real con el token → `core_webservice_get_site_info` responde correctamente (sitio "FP Virtual - Aragón", funciones visibles).
+- [ ] Ejecutar `test_moodle_api_v3.py` para validar el flujo completo de la API. *(Pendiente; la validación manual REST cubre lo esencial, pero la suite Python no se ha lanzado contra esta instancia.)*
 
 ---
 
 ## 5. CONSIDERACIONES ADICIONALES
 
 ### ¿Qué pasa con `import_FPVirtual_categories_and_courses.sh` y `moodle-api`?
-- Ese script también busca a `moodle-api` para añadirlo a `siteadmins`. **Hay que quitar esa lógica**.
-- El resto del script (creación de categorías, cursos, cohortes, roles de inspección/jefatura) **no se toca**.
+- Ese script también buscaba a `moodle-api` para añadirlo a `siteadmins`. **Esa lógica ya fue eliminada** (solo quedan `admin` (id 2) y `admin2`).
+- El resto del script (creación de categorías, cursos, cohortes, roles de inspección/jefatura) **no se tocó**.
 
 ### Capacidades del rol `integracion_api`
 - El rol necesita `moodle/webservice:createtoken` para que `generate_user_ws_tokens()` funcione.
@@ -302,7 +310,7 @@ if ($token) {
 
 ---
 
-## 6. COMANDOS DE PRUEBA (para mañana)
+## 6. COMANDOS DE REFERENCIA (históricos — la instalación ya se validó)
 
 ```bash
 # Reconstruir desde cero
@@ -322,4 +330,4 @@ docker compose logs -f moodle
 
 ---
 
-*Fin del plan. Listo para continuar mañana.*
+*Fin del plan. Completado el 2026-05-29 y verificado en el despliegue el 2026-09-08. Única tarea abierta: lanzar `test_moodle_api_v3.py` contra la instancia en ejecución.*
